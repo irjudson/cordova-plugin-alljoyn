@@ -1,4 +1,4 @@
-package com.example.plugin;
+package org.allseen.alljoyn;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
