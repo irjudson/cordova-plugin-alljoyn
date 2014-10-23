@@ -6,11 +6,13 @@
         
 	<name>AllJoyn</name>
 
-	<asset src="www/hello.js" target="js/hello.js" />
-
     <engines>
         <engine name="cordova" version=">=3.1.0" />
     </engines>
+
+    <js-module src="www/hello.js" name="hello">
+        <clobbers target="plugin.test" />
+    </js-module>
 
     <!-- android -->
 	<platform name="android">
@@ -27,12 +29,22 @@
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
             <feature name="AllJoyn">
-                <param name="ios-package" value="HWPHello" />
+                <param name="ios-package" value="AllJoynCommand" />
             </feature>
         </config-file>
 
 	    <header-file src="HWPHello.h" />	
 	    <source-file src="HWPHello.m" />	
-    </platform>	
+    </platform>
+
+    <!-- wp8 -->
+    <platform name="wp8">
+        <config-file target="config.xml" parent="/*">
+            <feature name="AllJoyn">
+                <param name="wp-package" value="AllJoynCommand"/>
+            </feature>
+        </config-file>
+        <source-file src="src/wp/hello.cs" />
+    </platform>
     
 </plugin>
