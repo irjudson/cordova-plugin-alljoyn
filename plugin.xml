@@ -11,23 +11,25 @@
         <engine name="cordova" version=">=3.1.0" />
     </engines>
 
-    <js-module src="www/hello.js" name="hello">
+    <js-module src="www/alljoyn.js" name="AllJoyn">
         <clobbers target="allseen.alljoyn" />
     </js-module>
 
     <!-- android -->
+    <!--
 	<platform name="android">
 		<config-file target="res/xml/config.xml" parent="/*">
             <feature name="AllJoyn">
-                <param name="android-package" value="org.allseen.alljoyn.Hello"/>
+                <param name="android-package" value="org.allseen.alljoyn"/>
                 <param name="onload" value="true"/>
             </feature>
 		</config-file>
 		        
-		<source-file src="src/android/Hello.java" target-dir="src/com/example/plugin/" />			
-    </platform>
+		<source-file src="src/android/AllJoyn.java" target-dir="src/com/example/plugin/" />			
+    </platform>-->
    
     <!-- ios -->
+    <!--
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
             <feature name="AllJoyn">
@@ -38,7 +40,7 @@
 
 	    <header-file src="HWPHello.h" />	
 	    <source-file src="HWPHello.m" />	
-    </platform>
+    </platform>-->
 
     <!-- wp8 -->
     <platform name="wp8">
@@ -48,8 +50,8 @@
                 <param name="onload" value="true"/>
             </feature>
         </config-file>
-        
-        <source-file src="src/wp/hello.cs" />
+
+        <source-file src="src/wp/AllJoyn.cs" />
     </platform>
     
 </plugin>

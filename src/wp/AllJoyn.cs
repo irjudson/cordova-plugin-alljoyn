@@ -4,9 +4,9 @@ using WPCordovaClassLib.Cordova.JSON;
 
 namespace Cordova.Extension.Commands
 {
-    public class Hello : BaseCommand
+    public class AllJoyn : BaseCommand
     {
-        public void greet(string args)
+        public void hello(string args)
         {
             string name = JsonHelper.Deserialize<string>(args);
             string message = "Hello, " + name;
