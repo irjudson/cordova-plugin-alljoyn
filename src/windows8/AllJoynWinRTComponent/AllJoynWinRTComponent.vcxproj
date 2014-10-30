@@ -106,7 +106,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <GenerateManifest>false</GenerateManifest>
-    <IncludePath>$(ProjectDir)external\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)external\alljoyn\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <GenerateManifest>false</GenerateManifest>
@@ -175,15 +175,15 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;QCC_OS_GROUP_WINDOWS;_WINRT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
       <AdditionalUsingDirectories>$(WindowsSDK_WindowsMetadata);$(AdditionalUsingDirectories)</AdditionalUsingDirectories>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/bigobj /vmm /vmg %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;QCC_OS_GROUP_WINDOWS;_WINRT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(ProjectDir)external\lib\alljoyn.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)external\alljoyn\lib\alljoyn.lib;$(ProjectDir)external\windows\lib\bcrypt.lib;$(ProjectDir)external\windows\lib\Crypt32.lib;$(ProjectDir)external\windows\lib\IPHlpApi.lib;$(ProjectDir)external\windows\lib\ncrypt.lib;$(ProjectDir)external\windows\lib\Secur32.lib;$(ProjectDir)external\windows\lib\WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>

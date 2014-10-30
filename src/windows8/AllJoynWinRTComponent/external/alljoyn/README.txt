@@ -1,1 +1,1 @@
-alljoyn-14.06.00a-win7x86vs2012-sdk-dbg
+alljoyn-14.06.00a-win7x64vs2012-sdk-dbg

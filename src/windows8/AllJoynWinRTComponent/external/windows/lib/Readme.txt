@@ -1,0 +1,1 @@
+C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Lib\x64
