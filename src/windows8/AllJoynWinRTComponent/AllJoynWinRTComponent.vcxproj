@@ -183,7 +183,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(ProjectDir)external\alljoyn\lib\alljoyn.lib;$(ProjectDir)external\windows\lib\bcrypt.lib;$(ProjectDir)external\windows\lib\Crypt32.lib;$(ProjectDir)external\windows\lib\IPHlpApi.lib;$(ProjectDir)external\windows\lib\ncrypt.lib;$(ProjectDir)external\windows\lib\Secur32.lib;$(ProjectDir)external\windows\lib\WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)external\alljoyn\lib\alljoyn.lib;bcrypt.lib;Crypt32.lib;IPHlpApi.lib;ncrypt.lib;Secur32.lib;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -205,7 +205,7 @@
   <ItemGroup>
     <ClInclude Include="BusAttachment.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="AllJoynDevice.h" />
+    <ClInclude Include="BusListener.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BusAttachment.cpp" />
@@ -217,7 +217,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="AllJoynDevice.cpp" />
+    <ClCompile Include="BusListener.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
