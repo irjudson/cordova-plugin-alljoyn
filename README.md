@@ -8,6 +8,7 @@ Implementation Notes
 Here are my current implementation plans:
 * Integrating with AllJoyn Core SDK 14.06.00a
 * Add Windows native support (x64) by building WinRT component port of the necessary libraries 
+* Requires Windows SDK 8.0
 
 Caveats
 -------
