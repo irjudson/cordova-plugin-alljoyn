@@ -19,6 +19,35 @@ Platform::String^ MultibyteToPlatformString(const char* str)
 
 BusAttachment::BusAttachment(String^ applicationName, Boolean allowRemoteMessages)
 {
+	printf("AllJoyn Library version: %s.\n", ajn::GetVersion());
+	printf("AllJoyn Library build info: %s.\n", ajn::GetBuildInfo());
+
+	QStatus status = ER_OK;
+
+	/* Create message bus. */
+	ajn::BusAttachment* g_msgBus = new ajn::BusAttachment("myApp", true);
+
+	/* This test for NULL is only required if new() behavior is to return NULL
+	* instead of throwing an exception upon an out of memory failure.
+	*/
+	if (!g_msgBus) {
+		status = ER_OUT_OF_MEMORY;
+	}
+
+	if (ER_OK == status) {
+		/* Add org.alljoyn.Bus.method_sample interface */
+		ajn::InterfaceDescription* testIntf = NULL;
+		status = g_msgBus->CreateInterface("org.alljoyn.Bus.sample", testIntf);
+	}
+
+	if (ER_OK == status) {
+		status = g_msgBus->Start();
+	}
+
+	if (ER_OK == status) {
+		status = g_msgBus->Connect();
+	}
+
 	_busAttachment = NULL;
 	_interfaceDescription = NULL;
 	_busAttachment = NULL;
@@ -65,9 +94,7 @@ String^ BusAttachment::Start()
 
 String^	BusAttachment::Connect(void)
 {
-	const char* connectArgs = "tcp:addr=127.0.0.1,port=9955";
-
-	QStatus status = _busAttachment->Connect(connectArgs);
+	QStatus status = _busAttachment->Connect();
 
 	if (ER_OK == status) {
 		printf("BusAttachment::Connect connected to '%s'.\n", _busAttachment->GetConnectSpec().c_str());
@@ -76,7 +103,7 @@ String^	BusAttachment::Connect(void)
 		printf("BusAttachment::Start - Failed. '%s'. Connection Specs: '%s'.\n", QCC_StatusText(status), _busAttachment->GetConnectSpec().c_str());
 	}
 
-	return MultibyteToPlatformString(QCC_StatusText(status));
+	return MultibyteToPlatformString(_busAttachment->GetConnectSpec().c_str());
 }
 
 void BusAttachment::RegisterBusListener(void)
