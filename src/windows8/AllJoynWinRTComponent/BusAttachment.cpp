@@ -1,26 +1,57 @@
 #include "pch.h"
 #include "BusAttachment.h"
-
+#include <assert.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 using namespace AllJoynWinRTComponent;
 using namespace Platform;
 using namespace Platform::Collections;
 using namespace std;
 using namespace Windows::Foundation::Collections;
 
+const char* PlatformStringToMultibyte(String^ str)
+{
+	wstring w_str(str->Begin());
+	string s_str(w_str.begin(), w_str.end());
+
+	char* temp = (char*)malloc(256 * sizeof(char));
+	strcpy(temp, s_str.c_str());
+	return temp;
+}
+
 Platform::String^ MultibyteToPlatformString(const char* str)
 {
 	auto s_str = std::string(str);
-
 	std::wstring w_str;
 	w_str.assign(s_str.begin(), s_str.end());
 
 	return ref new Platform::String(w_str.c_str());
 }
 
+ void Log(const char* str, ...)
+ {
+	 char buf[2048];
+
+	 va_list ptr;
+	 va_start(ptr, str);
+	 vsprintf(buf, str, ptr);
+
+	 auto s_str = std::string(buf);
+
+	 std::wstring w_str;
+	 w_str.assign(s_str.begin(), s_str.end());
+
+	 OutputDebugString(w_str.c_str());
+ }
+
+
 BusAttachment::BusAttachment(String^ applicationName, Boolean allowRemoteMessages)
 {
-	printf("AllJoyn Library version: %s.\n", ajn::GetVersion());
-	printf("AllJoyn Library build info: %s.\n", ajn::GetBuildInfo());
+	Log("AllJoyn Library:\n");
+	Log("	version: %s.\n", ajn::GetVersion());
+	Log("	build info: %s.\n", ajn::GetBuildInfo());
 
 	QStatus status = ER_OK;
 
@@ -66,13 +97,13 @@ String^ BusAttachment::CreateInterface(String^ name)
 	QStatus status = _busAttachment->CreateInterface(s_name.c_str(), _interfaceDescription);
 
 	if (status == ER_OK) {
-		printf("BusAttachment::CreateInterface - '%s' created.\n", s_name);
+		Log("BusAttachment::CreateInterface - '%s' created.\n", PlatformStringToMultibyte(name));
 
 		_interfaceDescription->AddMethod("cat", "ss", "s", "inStr1,inStr2,outStr", 0);
 		_interfaceDescription->Activate();
 	}
 	else {
-		printf("BusAttachment::CreateInterface - Failed. '%s'.\n", QCC_StatusText(status));
+		Log("BusAttachment::CreateInterface - Failed. '%s'.\n", QCC_StatusText(status));
 	}
 
 	return MultibyteToPlatformString(QCC_StatusText(status));
@@ -83,10 +114,10 @@ String^ BusAttachment::Start()
 	QStatus status = _busAttachment->Start();
 
 	if (ER_OK == status) {
-		printf("BusAttachment::Start - Started.\n");
+		Log("BusAttachment::Start - Started.\n");
 	}
 	else {
-		printf("BusAttachment::Start - Failed. '%s'.\n", QCC_StatusText(status));;
+		Log("BusAttachment::Start - Failed. '%s'.\n", QCC_StatusText(status));;
 	}
 
 	return MultibyteToPlatformString(QCC_StatusText(status));
@@ -97,10 +128,10 @@ String^	BusAttachment::Connect(void)
 	QStatus status = _busAttachment->Connect();
 
 	if (ER_OK == status) {
-		printf("BusAttachment::Connect connected to '%s'.\n", _busAttachment->GetConnectSpec().c_str());
+		Log("BusAttachment::Connect connected to '%s'.\n", _busAttachment->GetConnectSpec().c_str());
 	}
 	else {
-		printf("BusAttachment::Start - Failed. '%s'. Connection Specs: '%s'.\n", QCC_StatusText(status), _busAttachment->GetConnectSpec().c_str());
+		Log("BusAttachment::Start - Failed. '%s'. Connection Specs: '%s'.\n", QCC_StatusText(status), _busAttachment->GetConnectSpec().c_str());
 	}
 
 	return MultibyteToPlatformString(_busAttachment->GetConnectSpec().c_str());
@@ -120,10 +151,10 @@ String^ BusAttachment::FindAdvertisedName(String^ serviceName)
 	QStatus status = _busAttachment->FindAdvertisedName(s_serviceName.c_str());
 
 	if (status == ER_OK) {
-		printf("org.alljoyn.Bus.FindAdvertisedName ('%s') succeeded.\n", s_serviceName.c_str());
+		Log("org.alljoyn.Bus.FindAdvertisedName ('%s') succeeded.\n", s_serviceName.c_str());
 	}
 	else {
-		printf("org.alljoyn.Bus.FindAdvertisedName ('%s') failed (%s).\n", s_serviceName.c_str(), QCC_StatusText(status));
+		Log("org.alljoyn.Bus.FindAdvertisedName ('%s') failed (%s).\n", s_serviceName.c_str(), QCC_StatusText(status));
 	}
 
 	return MultibyteToPlatformString(QCC_StatusText(status));
