@@ -24,7 +24,7 @@
             </feature>
 		</config-file>
 		        
-		<source-file src="src/android/AllJoyn.java" />			
+        <source-file src="src/android/AllJoyn.java" target-dir="src/org/allseen/alljoyn" />
     </platform>
    
     <!-- ios -->
