@@ -16,7 +16,6 @@
     </js-module>
 
     <!-- android -->
-    <!--
 	<platform name="android">
 		<config-file target="res/xml/config.xml" parent="/*">
             <feature name="AllJoyn">
@@ -25,8 +24,8 @@
             </feature>
 		</config-file>
 		        
-		<source-file src="src/android/AllJoyn.java" target-dir="src/com/example/plugin/" />			
-    </platform>-->
+		<source-file src="src/android/AllJoyn.java" />			
+    </platform>
    
     <!-- ios -->
     <!--

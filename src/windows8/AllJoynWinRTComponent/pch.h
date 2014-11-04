@@ -10,13 +10,12 @@
 
 #include <stdio.h>
 #include <tchar.h>
-
-#include <qcc/platform.h>
-
 #include <assert.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <qcc/platform.h>
 
 #include <alljoyn/DBusStdDefines.h>
 #include <alljoyn/BusAttachment.h>
