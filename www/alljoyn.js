@@ -1,8 +1,8 @@
 var exec = require('cordova/exec');
 
 var alljoyn = {
-    hello: function(name) {
-        exec(null, null, "AllJoyn", "hello", [name]);
+    hello: function(callback, name) {
+        exec(callback, callback, "AllJoyn", "hello", [name]);
     }
 };
 
