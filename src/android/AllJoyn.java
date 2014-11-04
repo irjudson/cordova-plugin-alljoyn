@@ -10,7 +10,7 @@ public class AllJoyn extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
 
-        if (action.equals("greet")) {
+        if (action.equals("hello")) {
 
             String name = data.getString(0);
             String message = "Hello, " + name;
@@ -20,7 +20,11 @@ public class AllJoyn extends CordovaPlugin {
 
         } else {
             
-            return false;
+            String name = data.getString(0);
+            String message = "Bye, " + name;
+            callbackContext.success(message);
+
+            return true;
 
         }
     }
