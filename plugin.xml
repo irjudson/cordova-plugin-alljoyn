@@ -11,8 +11,8 @@
         <engine name="cordova" version=">=3.1.0" />
     </engines>
 
-    <js-module src="www/alljoyn.js" name="AllJoyn">
-        <clobbers target="allseen.alljoyn" />
+    <js-module src="www/alljoyn.js" name="allJoyn">
+        <merges target="allseen.alljoyn" />
     </js-module>
 
     <!-- android -->
@@ -20,7 +20,7 @@
 		<config-file target="res/xml/config.xml" parent="/*">
             <feature name="AllJoyn">
                 <param name="android-package" value="org.allseen.alljoyn.AllJoyn"/>
-                <param name="onload" value="true"/>
+                <!--<param name="onload" value="true"/>-->
             </feature>
 		</config-file>
 		        
