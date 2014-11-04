@@ -1,6 +1,6 @@
-#import "HWPHello.h"
+#import "AllJoyn.h"
 
-@implementation HWPHello
+@implementation AllJoyn
 
 - (void)greet:(CDVInvokedUrlCommand*)command
 {

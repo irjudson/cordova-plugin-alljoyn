@@ -16,7 +16,7 @@
     </js-module>
 
     <!-- android -->
-    <!--
+    
 	<platform name="android">
 		<config-file target="res/xml/config.xml" parent="/*">
             <feature name="AllJoyn">
@@ -26,10 +26,10 @@
 		</config-file>
 		        
 		<source-file src="src/android/AllJoyn.java" target-dir="src/com/example/plugin/" />			
-    </platform>-->
+    </platform>
    
     <!-- ios -->
-    <!--
+    
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
             <feature name="AllJoyn">
@@ -38,9 +38,9 @@
             </feature>
         </config-file>
 
-	    <header-file src="HWPHello.h" />	
-	    <source-file src="HWPHello.m" />	
-    </platform>-->
+	    <header-file src="AllJoyn.h" />	
+	    <source-file src="AllJoyn.m" />	
+    </platform>
 
     <!-- windows8 -->
     <platform name="windows8">
