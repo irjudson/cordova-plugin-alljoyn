@@ -20,12 +20,12 @@
 	<platform name="android">
 		<config-file target="res/xml/config.xml" parent="/*">
             <feature name="AllJoyn">
-                <param name="android-package" value="org.allseen.alljoyn"/>
+                <param name="android-package" value="org.allseen"/>
                 <param name="onload" value="true"/>
             </feature>
 		</config-file>
 		        
-		<source-file src="src/android/AllJoyn.java" target-dir="src/com/example/plugin/" />			
+		<source-file src="src/android/AllJoyn.java" target-dir="src/org/allseen" />			
     </platform>
    
     <!-- ios -->
