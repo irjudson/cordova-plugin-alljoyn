@@ -4,7 +4,7 @@
     id="org.allseen.alljoyn"
     version="0.0.1">
         
-	<name>AllJoyn</name>
+    <name>AllJoyn</name>
     <description>Cordova AllJoyn Plugin</description>
 
     <engines>
@@ -16,14 +16,14 @@
     </js-module>
 
     <!-- android -->
-	<platform name="android">
-		<config-file target="res/xml/config.xml" parent="/*">
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
             <feature name="AllJoyn">
                 <param name="android-package" value="org.allseen.alljoyn.AllJoyn"/>
                 <!--<param name="onload" value="true"/>-->
             </feature>
-		</config-file>
-		        
+        </config-file>
+                
         <source-file src="src/android/AllJoyn.java" target-dir="src/org/allseen/alljoyn" />
     </platform>
    
@@ -37,8 +37,8 @@
             </feature>
         </config-file>
 
-	    <header-file src="HWPHello.h" />	
-	    <source-file src="HWPHello.m" />	
+        <header-file src="HWPHello.h" />    
+        <source-file src="HWPHello.m" />    
     </platform>-->
 
     <!-- windows8 -->
