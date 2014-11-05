@@ -2,8 +2,8 @@ var exec = require('cordova/exec');
 
 module.exports = {
 
-    hello: function(callback, name) {
-        exec(callback, null, "AllJoyn", "hello", [name]);
+    hello: function(success, error, name) {
+        exec(success, error, "AllJoyn", "hello", [name]);
     }
 
 };
