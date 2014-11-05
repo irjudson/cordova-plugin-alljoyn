@@ -19,7 +19,7 @@ import org.json.JSONException;
 
 public class AllJoyn extends CordovaPlugin {
 
-    private static final String TAG = "AllJoynExample";
+    private static final String TAG = "AllJoyn";
 
     private BusHandler mBusHandler;
 
@@ -34,13 +34,39 @@ public class AllJoyn extends CordovaPlugin {
     public AllJoyn() {
         /* Make all AllJoyn calls through a separate handler thread to prevent blocking the UI. */
         HandlerThread busThread = new HandlerThread("BusHandler");
-        busThread.start();
-        mBusHandler = new BusHandler(busThread.getLooper());
+        Log.v(TAG, "AllJoyn: constructor");
+    }
 
-        /* Connect to an AllJoyn object. */
-        mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
+    /**
+     * Sets the context of the Command. This can then be used to do things like
+     * get file paths associated with the Activity.
+     *
+     * @param cordova The context of the main Activity.
+     * @param webView The CordovaWebView Cordova is running in.
+     */
+    @Override
+    public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
+        Log.v(TAG, "AllJoyn: initialization");
+
+        super.initialize(cordova, webView);
+
+        // busThread.start();
+        // mBusHandler = new BusHandler(busThread.getLooper());
+
+        // /* Connect to an AllJoyn object. */
+        // mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
         // mHandler.sendEmptyMessage(MESSAGE_START_PROGRESS_DIALOG);
-        logInfo("Finished initializing.");
+ 
+
+        this.cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Clear flag FLAG_FORCE_NOT_FULLSCREEN which is set initially
+                // by the Cordova.
+                Window window = cordova.getActivity().getWindow();
+                window.clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            }
+        });
     }
 
     /**
@@ -281,32 +307,5 @@ public class AllJoyn extends CordovaPlugin {
         private void sendUiMessage(int what, Object obj) {
             mHandler.sendMessage(mHandler.obtainMessage(what, obj));
         }
-    }
-
-    private void logStatus(String msg, Status status) {
-        String log = String.format("%s: %s", msg, status);
-        if (status == Status.OK) {
-            Log.i(TAG, log);
-        } else {
-            // Message toastMsg = mHandler.obtainMessage(MESSAGE_POST_TOAST, log);
-            // mHandler.sendMessage(toastMsg);
-            Log.e(TAG, log);
-        }
-    }
-
-    private void logException(String msg, BusException ex) {
-        String log = String.format("%s: %s", msg, ex);
-        // Message toastMsg = mHandler.obtainMessage(MESSAGE_POST_TOAST, log);
-        // mHandler.sendMessage(toastMsg);
-        Log.e(TAG, log, ex);
-    }
-
-    /*
-     * print the status or result to the Android log. If the result is the expected
-     * result only print it to the log.  Otherwise print it to the error log and
-     * Sent a Toast to the users screen.
-     */
-    private void logInfo(String msg) {
-        Log.i(TAG, msg);
     }
 }
