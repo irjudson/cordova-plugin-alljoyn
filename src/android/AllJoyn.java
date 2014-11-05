@@ -32,9 +32,7 @@ public class AllJoyn extends CordovaPlugin {
      * Constructor.
      */
     public AllJoyn() {
-        /* Make all AllJoyn calls through a separate handler thread to prevent blocking the UI. */
-        HandlerThread busThread = new HandlerThread("BusHandler");
-        Log.v(TAG, "AllJoyn: constructor");
+        Log.i(TAG, "AllJoyn: constructor");
     }
 
     /**
@@ -46,9 +44,11 @@ public class AllJoyn extends CordovaPlugin {
      */
     @Override
     public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
-        Log.v(TAG, "AllJoyn: initialization");
-
         super.initialize(cordova, webView);
+
+        /* Make all AllJoyn calls through a separate handler thread to prevent blocking the UI. */
+        // HandlerThread busThread = new HandlerThread("BusHandler");
+        Log.i(TAG, "AllJoyn: initialization");
 
         // busThread.start();
         // mBusHandler = new BusHandler(busThread.getLooper());
@@ -56,17 +56,6 @@ public class AllJoyn extends CordovaPlugin {
         // /* Connect to an AllJoyn object. */
         // mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
         // mHandler.sendEmptyMessage(MESSAGE_START_PROGRESS_DIALOG);
- 
-
-        this.cordova.getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // Clear flag FLAG_FORCE_NOT_FULLSCREEN which is set initially
-                // by the Cordova.
-                Window window = cordova.getActivity().getWindow();
-                window.clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-            }
-        });
     }
 
     /**
