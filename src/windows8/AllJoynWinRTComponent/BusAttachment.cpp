@@ -50,7 +50,6 @@ Platform::String^ MultibyteToPlatformString(const char* str)
 BusAttachment::BusAttachment(String^ applicationName, Boolean allowRemoteMessages)
 {
 	Log("AllJoyn Library:\n");
-	Log("	version: %s.\n", ajn::GetVersion());
 	Log("	build info: %s.\n", ajn::GetBuildInfo());
 
 	QStatus status = ER_OK;
@@ -76,7 +75,8 @@ BusAttachment::BusAttachment(String^ applicationName, Boolean allowRemoteMessage
 	}
 
 	if (ER_OK == status) {
-		status = g_msgBus->Connect();
+		status = g_msgBus->Connect("tcp:addr=192.168.56.1,port=9956");
+//		status = g_msgBus->Connect();
 	}
 
 	_busAttachment = NULL;

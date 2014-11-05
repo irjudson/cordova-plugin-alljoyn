@@ -7,6 +7,21 @@ import org.json.JSONException;
 
 public class AllJoyn extends CordovaPlugin {
 
+    /**
+     * Constructor.
+     */
+    public AllJoyn() {
+    }
+
+
+    /**
+     * Executes the request and returns PluginResult.
+     *
+     * @param action            The action to execute.
+     * @param args              JSONArray of arguments for the plugin.
+     * @param callbackContext   The callback context used when calling back into JavaScript.
+     * @return                  True when the action was valid, false otherwise.
+     */    
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
 
@@ -20,7 +35,11 @@ public class AllJoyn extends CordovaPlugin {
 
         } else {
             
-            return false;
+            String name = data.getString(0);
+            String message = "Bye, " + name;
+            callbackContext.success(message);
+
+            return true;
 
         }
     }
