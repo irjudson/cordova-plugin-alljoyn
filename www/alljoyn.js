@@ -9,8 +9,8 @@ var alljoyn = {
 		exec(success, error, "AllJoyn", "hello", [name]);
 	},
 	start: function(success, error) {
-		// argscheck.checkArgs('FF', 'allseen.alljoyn.start', arguments);
-		exec(success, error, "AllJoyn", "start");
+		argscheck.checkArgs('FF', 'allseen.alljoyn.start', arguments);
+		exec(success, error, "AllJoyn", "start", []);
 	}
 };
 
