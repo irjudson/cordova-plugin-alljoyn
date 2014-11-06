@@ -53,6 +53,7 @@ public class AllJoyn extends CordovaPlugin {
 			@Override
 			public void foundAdvertisedName(String name, short transport, String namePrefix) {
 				mBus.enableConcurrentCallbacks();
+				Log.i(TAG, "Found: " + name);
 				short contactPort = CONTACT_PORT;
 				SessionOpts sessionOpts = new SessionOpts();
 				Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
