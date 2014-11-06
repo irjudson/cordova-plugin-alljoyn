@@ -45,26 +45,39 @@ public class AllJoyn extends CordovaPlugin {
 	public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
 		super.initialize(cordova, webView);
 		Log.i(TAG, "Initialization running.");
+		
+		Log.i(TAG, "Creating BusAttachment.");
 		mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
-		Log.i(TAG, "Created BusAttachment.");
+		
+		Log.i(TAG, "Registering mBusBusListener.");
 		mBus.registerBusListener(new BusListener() {
 			@Override
 			public void foundAdvertisedName(String name, short transport, String namePrefix) {
 				mBus.enableConcurrentCallbacks();
-				Log.i(TAG, "mBusListener Found: " + name);
+				Log.i(TAG, "Service Found: " + name + " " + namePrefix);
 				short contactPort = CONTACT_PORT;
 				SessionOpts sessionOpts = new SessionOpts();
 				Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
 				Status status = mBus.joinSession(name, contactPort, sessionId, sessionOpts, new SessionListener());
 			}
 		});
-		Log.i(TAG, "AllJoyn: mBus registerBusListener Success.");
+		
+		Log.i(TAG, "Connecting to mBus.");
 		Status status = mBus.connect();
 		if (status == Status.OK) {
 			Log.i(TAG, "mBus Connect Success: " + status.getErrorCode());
 		} else {
 			Log.i(TAG, "mBus Connect Error: " + status.getErrorCode());
 		}
+
+		Log.i(TAG, "Finding Router Daemon.");
+		Status status = mBus.findAdvertisedName("org.alljoyn.BusNode");
+		if (status == Status.OK) {
+			Log.i(TAG, "Find Router Daemon Success: " + status.getErrorCode());
+		} else {
+			Log.i(TAG, "Find Router Daemon Error: " + status.getErrorCode());
+		}
+
 		Log.i(TAG, "Initialization completed.");
 	}
 
@@ -91,10 +104,10 @@ public class AllJoyn extends CordovaPlugin {
 			Log.i(TAG, "Calling discover");
 			Status status = mBus.findAdvertisedName("org.alljoyn.BusNode.*");
 			if (status != Status.OK) {
-    			callbackContext.error("AllJoyn Find Devices Error: " + status.getErrorCode());
+    			callbackContext.error("Find Devices Error: " + status.getErrorCode());
 				return false;
 			}
-			callbackContext.success("Success: " + status.getErrorCode());
+			callbackContext.success("Find Devices Success: " + status.getErrorCode());
 			return true;
 		}
 		return false;
