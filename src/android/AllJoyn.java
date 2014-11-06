@@ -33,7 +33,7 @@ public class AllJoyn extends CordovaPlugin {
 	private static final String TAG = "AllJoyn";
 	private static final short CONTACT_PORT=42;
     private static final String DAEMON_AUTH = "ALLJOYN_PIN_KEYX";
-    private static final String DAEMON_PWD = "1234";
+    private static final String DAEMON_PWD = "000000";
 
 	BusAttachment mBus;
 
