@@ -44,26 +44,28 @@ public class AllJoyn extends CordovaPlugin {
 	@Override
 	public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
 		super.initialize(cordova, webView);
-
-		Log.i(TAG, "AllJoyn: initialization");
-
+		Log.i(TAG, "Initialization running.");
 		mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
-
-		Log.i(TAG, "AllJoyn: created bus attachment");
-
+		Log.i(TAG, "Created BusAttachment.");
 		mBus.registerBusListener(new BusListener() {
 			@Override
 			public void foundAdvertisedName(String name, short transport, String namePrefix) {
 				mBus.enableConcurrentCallbacks();
-				Log.i(TAG, "Found: " + name);
+				Log.i(TAG, "mBusListener Found: " + name);
 				short contactPort = CONTACT_PORT;
 				SessionOpts sessionOpts = new SessionOpts();
 				Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
 				Status status = mBus.joinSession(name, contactPort, sessionId, sessionOpts, new SessionListener());
 			}
 		});
-
-		Log.i(TAG, "AllJoyn: registered bus listener");
+		Log.i(TAG, "AllJoyn: mBus registerBusListener Success.");
+		Status status = mBus.connect();
+		if (status == Status.OK) {
+			Log.i(TAG, "mBus Connect Success: " + status.getErrorCode());
+		} else {
+			Log.i(TAG, "mBus Connect Error: " + status.getErrorCode());
+		}
+		Log.i(TAG, "Initialization completed.");
 	}
 
 	/**
@@ -85,24 +87,16 @@ public class AllJoyn extends CordovaPlugin {
 			return true;
 		}
 
-		if (action.equals("start")) {
-			Log.i(TAG, "Calling start");
-			Status status = mBus.connect();
+		if (action.equals("discover")) {
+			Log.i(TAG, "Calling discover");
+			status = mBus.findAdvertisedName("org.alljoyn.BusNode.*");
 			if (status != Status.OK) {
-				callbackContext.error("AllJoyn Connect Error: " + status.getErrorCode());
+    			callbackContext.error("AllJoyn Find Devices Error: " + status.getErrorCode());
 				return false;
-			} else {
-				// status = mBus.findAdvertisedName("org.alljoyn.BusNode");
-				status = mBus.findAdvertisedName("org.alljoyn.BusNode");
-				if (status != Status.OK) {
-    				callbackContext.error("AllJoyn Find Daemon Error: " + status.getErrorCode());
-					return false;
-				}
-				callbackContext.success("Success: " + status.getErrorCode());
-				return true;
 			}
+			callbackContext.success("Success: " + status.getErrorCode());
+			return true;
 		}
-
 		return false;
 	}
 }
