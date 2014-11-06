@@ -29,13 +29,6 @@ public class AllJoyn extends CordovaPlugin {
     }
 
     /**
-     * Constructor.
-     */
-    public AllJoyn() {
-        Log.i(TAG, "AllJoyn: constructor");
-    }
-
-    /**
      * Sets the context of the Command. This can then be used to do things like
      * get file paths associated with the Activity.
      *
@@ -70,6 +63,7 @@ public class AllJoyn extends CordovaPlugin {
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
 
         if (action.equals("hello")) {
+            Log.i(TAG, "Calling hello + " + name);
             String name = data.getString(0);
             String message = "Hello, " + name;
             callbackContext.success(message);
