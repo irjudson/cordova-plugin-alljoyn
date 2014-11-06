@@ -24,15 +24,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 public class AllJoyn extends CordovaPlugin {
-
-	private static final String TAG = "AllJoyn";
-
-	private BusHandler mBusHandler;
-
 	/* Load the native alljoyn_java library. */
 	static {
 		System.loadLibrary("alljoyn_java");
 	}
+
+	private static final String TAG = "AllJoyn";
+	private static final short CONTACT_PORT=42;
+
+	BusAttachment mBus;
 
 	/**
 	 * Sets the context of the Command. This can then be used to do things like
@@ -47,9 +47,7 @@ public class AllJoyn extends CordovaPlugin {
 
 		Log.i(TAG, "AllJoyn: initialization");
 
-		BusAttachment mBus;
 		mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
-		private static final short CONTACT_PORT=42;
 
 		mBus.registerBusListener(new BusListener() {
 			@Override
