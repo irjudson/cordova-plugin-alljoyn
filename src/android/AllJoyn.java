@@ -63,9 +63,10 @@ public class AllJoyn extends CordovaPlugin {
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
 
         if (action.equals("hello")) {
-            Log.i(TAG, "Calling hello + " + name);
+            Log.i(TAG, "Calling hello");
             String name = data.getString(0);
             String message = "Hello, " + name;
+            Log.i(TAG, message);
             callbackContext.success(message);
             return true;
         }
