@@ -49,16 +49,16 @@ public class AllJoyn extends CordovaPlugin {
 
 		mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
 
-		mBus.registerBusListener(new BusListener() {
-			@Override
-			public void foundAdvertisedName(String name, short transport, String namePrefix) {
-				mBus.enableConcurrentCallbacks();
-				short contactPort = CONTACT_PORT;
-				SessionOpts sessionOpts = new SessionOpts();
-				Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
-				Status status = mBus.joinSession((String) msg.obj, contactPort, sessionId, sessionOpts, new SessionListener());
-			}
-		});
+		// mBus.registerBusListener(new BusListener() {
+		// 	@Override
+		// 	public void foundAdvertisedName(String name, short transport, String namePrefix) {
+		// 		mBus.enableConcurrentCallbacks();
+		// 		short contactPort = CONTACT_PORT;
+		// 		SessionOpts sessionOpts = new SessionOpts();
+		// 		Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
+		// 		Status status = mBus.joinSession((String) msg.obj, contactPort, sessionId, sessionOpts, new SessionListener());
+		// 	}
+		// });
 	}
 
 	/**
