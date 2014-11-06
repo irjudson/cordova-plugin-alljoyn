@@ -46,7 +46,7 @@ public class AllJoyn extends CordovaPlugin {
 		super.initialize(cordova, webView);
 
 		/* Make all AllJoyn calls through a separate handler thread to prevent blocking the UI. */
-		// HandlerThread busThread = new HandlerThread("BusHandler");
+		HandlerThread busThread = new HandlerThread("BusHandler");
 		Log.i(TAG, "AllJoyn: initialization");
 
 		busThread.start();
@@ -144,7 +144,7 @@ public class AllJoyn extends CordovaPlugin {
 	        switch(msg.what) {
 	        /* Connect to a remote instance of an object implementing the SimpleInterface. */
 	        case CONNECT: {
-	        	Log.i("Got Connect");
+	        	Log.i(TAG, "Got Connect");
 	            // org.alljoyn.bus.alljoyn.DaemonInit.PrepareDaemon(getApplicationContext());
 	            /*
 	             * All communication through AllJoyn begins with a BusAttachment.
@@ -206,7 +206,7 @@ public class AllJoyn extends CordovaPlugin {
 	            break;
 	        }
 	        case (JOIN_SESSION): {
-	        	Log.i("Got JOIN_SESSION");
+	        	Log.i(TAG, "Got JOIN_SESSION");
 	            /*
 	             * If discovery is currently being stopped don't join to any other sessions.
 	             */
