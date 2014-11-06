@@ -8,6 +8,7 @@ import org.alljoyn.bus.ProxyBusObject;
 import org.alljoyn.bus.SessionListener;
 import org.alljoyn.bus.SessionOpts;
 import org.alljoyn.bus.Status;
+import org.alljoyn.bus.PasswordManager;
 
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -31,6 +32,8 @@ public class AllJoyn extends CordovaPlugin {
 
 	private static final String TAG = "AllJoyn";
 	private static final short CONTACT_PORT=42;
+    private static final String DAEMON_AUTH = "ALLJOYN_PIN_KEYX";
+    private static final String DAEMON_PWD = "1234";
 
 	BusAttachment mBus;
 
@@ -46,6 +49,14 @@ public class AllJoyn extends CordovaPlugin {
 		super.initialize(cordova, webView);
 		Log.i(TAG, "Initialization running.");
 		
+		Log.i("Setting Authentication.");
+		Status status = PasswordManager.setCredentials(DAEMON_AUTH, DAEMON_PWD);
+        if (status == Status.OK) {
+        	Log.i(TAG, "AUTH set successfully.");
+        } else {
+        	Log.i(TAG, "AUTH set failed: " + stats.getErrorCode());
+        }
+
 		Log.i(TAG, "Creating BusAttachment.");
 		mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
 		
@@ -63,9 +74,9 @@ public class AllJoyn extends CordovaPlugin {
 		});
 		
 		Log.i(TAG, "Connecting to mBus.");
-		Status status = mBus.connect();
+		status = mBus.connect();
 		if (status == Status.OK) {
-			Log.i(TAG, "mBus Connect Success: " + status.getErrorCode());
+			Log.i(TAG, "mBus Connect Success.");
 		} else {
 			Log.i(TAG, "mBus Connect Error: " + status.getErrorCode());
 		}
@@ -73,7 +84,7 @@ public class AllJoyn extends CordovaPlugin {
 		Log.i(TAG, "Finding Router Daemon.");
 		status = mBus.findAdvertisedName("org.alljoyn.BusNode");
 		if (status == Status.OK) {
-			Log.i(TAG, "Find Router Daemon Success: " + status.getErrorCode());
+			Log.i(TAG, "Find Router Daemon Success.");
 		} else {
 			Log.i(TAG, "Find Router Daemon Error: " + status.getErrorCode());
 		}
@@ -103,12 +114,14 @@ public class AllJoyn extends CordovaPlugin {
 		if (action.equals("discover")) {
 			Log.i(TAG, "Calling discover");
 			Status status = mBus.findAdvertisedName("org.alljoyn.BusNode.*");
-			if (status != Status.OK) {
-    			callbackContext.error("Find Devices Error: " + status.getErrorCode());
+			if (status == Status.OK) {
+				callbackContext.success("Find Devices Success.");
+				return true;
+			} else {
+				callbackContext.error("Find Devices Error: " + status.getErrorCode());
 				return false;
 			}
-			callbackContext.success("Find Devices Success: " + status.getErrorCode());
-			return true;
+			    
 		}
 		return false;
 	}
