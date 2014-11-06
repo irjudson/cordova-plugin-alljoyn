@@ -71,7 +71,7 @@ public class AllJoyn extends CordovaPlugin {
 		}
 
 		Log.i(TAG, "Finding Router Daemon.");
-		Status status = mBus.findAdvertisedName("org.alljoyn.BusNode");
+		status = mBus.findAdvertisedName("org.alljoyn.BusNode");
 		if (status == Status.OK) {
 			Log.i(TAG, "Find Router Daemon Success: " + status.getErrorCode());
 		} else {
