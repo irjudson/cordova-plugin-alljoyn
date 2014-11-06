@@ -49,7 +49,7 @@ public class AllJoyn extends CordovaPlugin {
 		super.initialize(cordova, webView);
 		Log.i(TAG, "Initialization running.");
 		
-		Log.i("Setting Authentication.");
+		Log.i(TAG, "Setting Authentication.");
 		Status status = PasswordManager.setCredentials(DAEMON_AUTH, DAEMON_PWD);
         if (status == Status.OK) {
         	Log.i(TAG, "AUTH set successfully.");
