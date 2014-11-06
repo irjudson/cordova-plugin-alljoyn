@@ -89,7 +89,7 @@ public class AllJoyn extends CordovaPlugin {
 
 		if (action.equals("discover")) {
 			Log.i(TAG, "Calling discover");
-			status = mBus.findAdvertisedName("org.alljoyn.BusNode.*");
+			Status status = mBus.findAdvertisedName("org.alljoyn.BusNode.*");
 			if (status != Status.OK) {
     			callbackContext.error("AllJoyn Find Devices Error: " + status.getErrorCode());
 				return false;
