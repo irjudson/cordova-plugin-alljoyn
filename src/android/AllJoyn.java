@@ -27,7 +27,7 @@ public class AllJoyn extends CordovaPlugin {
 
     private static final String TAG = "AllJoyn";
 
-    private BusHandler mBusHandler;
+    // private BusHandler mBusHandler;
 
     /* Load the native alljoyn_java library. */
     static {
