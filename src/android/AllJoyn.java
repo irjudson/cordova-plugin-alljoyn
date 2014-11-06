@@ -27,7 +27,7 @@ public class AllJoyn extends CordovaPlugin {
 
 	private static final String TAG = "AllJoyn";
 
-	// private BusHandler mBusHandler;
+	private BusHandler mBusHandler;
 
 	/* Load the native alljoyn_java library. */
 	static {
@@ -49,11 +49,11 @@ public class AllJoyn extends CordovaPlugin {
 		// HandlerThread busThread = new HandlerThread("BusHandler");
 		Log.i(TAG, "AllJoyn: initialization");
 
-		// busThread.start();
-		// mBusHandler = new BusHandler(busThread.getLooper());
+		busThread.start();
+		mBusHandler = new BusHandler(busThread.getLooper());
 
-		// /* Connect to an AllJoyn object. */
-		// mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
+		/* Connect to an AllJoyn object. */
+		mBusHandler.sendEmptyMessage(BusHandler.CONNECT);
 		// mHandler.sendEmptyMessage(MESSAGE_START_PROGRESS_DIALOG);
 	}
 
