@@ -57,7 +57,7 @@ public class AllJoyn extends CordovaPlugin {
 				short contactPort = CONTACT_PORT;
 				SessionOpts sessionOpts = new SessionOpts();
 				Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
-				Status status = mBus.joinSession((String) msg.obj, contactPort, sessionId, sessionOpts, new SessionListener());
+				// Status status = mBus.joinSession((String) msg.obj, contactPort, sessionId, sessionOpts, new SessionListener());
 			}
 		});
 	}
