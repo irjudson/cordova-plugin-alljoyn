@@ -4,10 +4,6 @@ var argscheck = require('cordova/argscheck'),
 	cordova = require('cordova');
 
 var alljoyn = {
-	hello: function(name, success, error) {
-		argscheck.checkArgs('SFF', 'allseen.alljoyn.hello', arguments);
-		exec(success, error, "AllJoyn", "hello", [name]);
-	},
 	discover: function(success, error) {
 		argscheck.checkArgs('FF', 'allseen.alljoyn.discover', arguments);
 		exec(success, error, "AllJoyn", "discover", []);
