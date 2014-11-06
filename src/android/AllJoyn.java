@@ -86,7 +86,7 @@ public class AllJoyn extends CordovaPlugin {
 		}
 
 		if (action.equals("start")) {
-			Log.i(TAG, "Calling listen");
+			Log.i(TAG, "Calling start");
 			Status status = mBus.connect();
 			if (status != Status.OK) {
 				callbackContext.error("AllJoyn Connect Error: " + status.getErrorCode());
