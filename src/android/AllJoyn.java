@@ -54,7 +54,7 @@ public class AllJoyn extends CordovaPlugin {
         if (status == Status.OK) {
         	Log.i(TAG, "AUTH set successfully.");
         } else {
-        	Log.i(TAG, "AUTH set failed: " + stats.getErrorCode());
+        	Log.i(TAG, "AUTH set failed: " + status.getErrorCode());
         }
 
 		Log.i(TAG, "Creating BusAttachment.");
