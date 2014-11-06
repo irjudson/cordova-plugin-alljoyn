@@ -93,7 +93,7 @@ public class AllJoyn extends CordovaPlugin {
 				return false;
 			} else {
 				// status = mBus.findAdvertisedName("org.alljoyn.BusNode");
-				status = mBus.findAdvertisedName("*");
+				status = mBus.findAdvertisedName("org.alljoyn.BusNode");
 				if (status != Status.OK) {
     				callbackContext.error("AllJoyn Find Daemon Error: " + status.getErrorCode());
 					return false;
