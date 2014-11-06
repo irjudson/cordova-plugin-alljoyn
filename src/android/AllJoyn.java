@@ -49,16 +49,16 @@ public class AllJoyn extends CordovaPlugin {
 
 		mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
 
-		// mBus.registerBusListener(new BusListener() {
-		// 	@Override
-		// 	public void foundAdvertisedName(String name, short transport, String namePrefix) {
-		// 		mBus.enableConcurrentCallbacks();
-		// 		short contactPort = CONTACT_PORT;
-		// 		SessionOpts sessionOpts = new SessionOpts();
-		// 		Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
-		// 		Status status = mBus.joinSession((String) msg.obj, contactPort, sessionId, sessionOpts, new SessionListener());
-		// 	}
-		// });
+		mBus.registerBusListener(new BusListener() {
+			@Override
+			public void foundAdvertisedName(String name, short transport, String namePrefix) {
+				mBus.enableConcurrentCallbacks();
+				short contactPort = CONTACT_PORT;
+				SessionOpts sessionOpts = new SessionOpts();
+				Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
+				Status status = mBus.joinSession((String) msg.obj, contactPort, sessionId, sessionOpts, new SessionListener());
+			}
+		});
 	}
 
 	/**
@@ -80,13 +80,18 @@ public class AllJoyn extends CordovaPlugin {
 			return true;
 		}
 
-		if (action.equals("listen")) {
+		if (action.equals("start")) {
 			Log.i(TAG, "Calling listen");
 			Status status = mBus.connect();
 			if (status != Status.OK) {
-				callbackContext.error("ERROR: " + status.getErrorCode());
+				callbackContext.error("AllJoyn Connect Error: " + status.getErrorCode());
 				return false;
 			} else {
+				status = mBus.findAdvertisedName("org.alljoyn.BusNode");
+				if (status != Status.OK) {
+    				callbackContext.error("AllJoyn Find Daemon Error: " + status.getErrorCode());
+					return false;
+				}
 				callbackContext.success("Success: " + status.getErrorCode());
 				return true;
 			}
