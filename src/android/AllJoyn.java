@@ -49,6 +49,8 @@ public class AllJoyn extends CordovaPlugin {
 
 		mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
 
+		Log.i(TAG, "AllJoyn: created bus attachment");
+
 		mBus.registerBusListener(new BusListener() {
 			@Override
 			public void foundAdvertisedName(String name, short transport, String namePrefix) {
@@ -60,6 +62,8 @@ public class AllJoyn extends CordovaPlugin {
 				// Status status = mBus.joinSession((String) msg.obj, contactPort, sessionId, sessionOpts, new SessionListener());
 			}
 		});
+
+		Log.i(TAG, "AllJoyn: registered bus listener");
 	}
 
 	/**
