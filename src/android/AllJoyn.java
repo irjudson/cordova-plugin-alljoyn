@@ -84,10 +84,10 @@ public class AllJoyn extends CordovaPlugin {
 			Log.i(TAG, "Calling listen");
 			Status status = mBus.connect();
 			if (status != Status.OK) {
-				callbackContext.error(status);
+				callbackContext.error("ERROR: " + status.getErrorCode());
 				return false;
 			} else {
-				callbackContext.success(status);
+				callbackContext.success("Success: " + status.getErrorCode());
 				return true;
 			}
 		}
