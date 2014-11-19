@@ -1,6 +1,12 @@
-#import "AllJoyn.h"
+#define AJ_MODULE BASIC_CLIENT
 
-@implementation AllJoyn
+#import "AllJoyn_Cordova.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "aj_debug.h"
+#include "alljoyn.h"
+
+@implementation AllJoyn_Cordova
 
 - (void)greet:(CDVInvokedUrlCommand*)command
 {

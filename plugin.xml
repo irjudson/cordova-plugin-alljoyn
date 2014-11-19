@@ -30,18 +30,94 @@
 	</platform>
    
 	<!-- ios -->
-	<!--
+
 	<platform name="ios">
 		<config-file target="config.xml" parent="/*">
 			<feature name="AllJoyn">
-				<param name="ios-package" value="AllJoyn" />
+				<param name="ios-package" value="AllJoyn_Cordova" />
 				<param name="onload" value="true"/>
 			</feature>
 		</config-file>
 
-		<header-file src="AllJoyn.h" />    
-		<source-file src="AllJoyn.m" />    
-	</platform>-->
+		<framework src="Security.framework" />
+
+		<source-file src="src/ajtcl/aj_about.c"/>
+		<header-file src="src/ajtcl/aj_about.h"/>
+		<header-file src="src/ajtcl/aj_auth_listener.h"/>
+		<source-file src="src/ajtcl/aj_bufio.c"/>
+		<header-file src="src/ajtcl/aj_bufio.h"/>
+		<source-file src="src/ajtcl/aj_bus.c"/>
+		<header-file src="src/ajtcl/aj_bus.h"/>
+		<source-file src="src/ajtcl/aj_cert.c"/>
+		<header-file src="src/ajtcl/aj_cert.h"/>
+		<header-file src="src/ajtcl/aj_config.h"/>
+		<source-file src="src/ajtcl/aj_connect.c"/>
+		<header-file src="src/ajtcl/aj_connect.h"/>
+		<source-file src="src/ajtcl/aj_crc16.c"/>
+		<header-file src="src/ajtcl/aj_crc16.h"/>
+		<source-file src="src/ajtcl/aj_creds.c"/>
+		<header-file src="src/ajtcl/aj_creds.h"/>
+		<source-file src="src/ajtcl/aj_crypto.c"/>
+		<header-file src="src/ajtcl/aj_crypto.h"/>
+		<source-file src="src/ajtcl/aj_crypto_ecc.c"/>
+		<header-file src="src/ajtcl/aj_crypto_ecc.h"/>
+		<source-file src="src/ajtcl/aj_crypto_sha2.c"/>
+		<header-file src="src/ajtcl/aj_crypto_sha2.h"/>
+		<source-file src="src/ajtcl/aj_debug.c"/>
+		<header-file src="src/ajtcl/aj_debug.h"/>
+		<source-file src="src/ajtcl/aj_disco.c"/>
+		<header-file src="src/ajtcl/aj_disco.h"/>
+		<source-file src="src/ajtcl/aj_guid.c"/>
+		<header-file src="src/ajtcl/aj_guid.h"/>
+		<source-file src="src/ajtcl/aj_helper.c"/>
+		<header-file src="src/ajtcl/aj_helper.h"/>
+		<source-file src="src/ajtcl/aj_init.c"/>
+		<header-file src="src/ajtcl/aj_init.h"/>
+		<source-file src="src/ajtcl/aj_introspect.c"/>
+		<header-file src="src/ajtcl/aj_introspect.h"/>
+		<source-file src="src/ajtcl/aj_keyauthentication.c"/>
+		<header-file src="src/ajtcl/aj_keyauthentication.h"/>
+		<source-file src="src/ajtcl/aj_keyexchange.c"/>
+		<header-file src="src/ajtcl/aj_keyexchange.h"/>
+		<source-file src="src/ajtcl/aj_link_timeout.c"/>
+		<header-file src="src/ajtcl/aj_link_timeout.h"/>
+		<source-file src="src/ajtcl/aj_msg.c"/>
+		<header-file src="src/ajtcl/aj_msg.h"/>
+		<header-file src="src/ajtcl/aj_msg_priv.h"/>
+		<header-file src="src/ajtcl/aj_net.h"/>
+		<source-file src="src/ajtcl/aj_nvram.c"/>
+		<header-file src="src/ajtcl/aj_nvram.h"/>
+		<source-file src="src/ajtcl/aj_peer.c"/>
+		<header-file src="src/ajtcl/aj_peer.h"/>
+		<source-file src="src/ajtcl/aj_serial.c"/>
+		<header-file src="src/ajtcl/aj_serial.h"/>
+		<source-file src="src/ajtcl/aj_serial_rx.c"/>
+		<header-file src="src/ajtcl/aj_serial_rx.h"/>
+		<source-file src="src/ajtcl/aj_serial_tx.c"/>
+		<header-file src="src/ajtcl/aj_serial_tx.h"/>
+		<header-file src="src/ajtcl/aj_serio.h"/>
+		<header-file src="src/ajtcl/aj_status.h"/>
+		<source-file src="src/ajtcl/aj_std.c"/>
+		<header-file src="src/ajtcl/aj_std.h"/>
+		<source-file src="src/ajtcl/aj_util.c"/>
+		<header-file src="src/ajtcl/aj_util.h"/>
+		<header-file src="src/ajtcl/aj_version.h"/>
+		<header-file src="src/ajtcl/aj_wifi_ctrl.h"/>
+		<header-file src="src/ajtcl/alljoyn.h"/>
+		<source-file src="src/ajtcl/sha2.c"/>
+		<header-file src="src/ajtcl/sha2.h"/> 
+
+		<source-file src="src/ios/aj_net.c"/> 
+		<source-file src="src/ios/aj_sw_crypto.c"/> 
+		<source-file src="src/ios/aj_target_nvram.c"/> 
+		<header-file src="src/ios/aj_target_nvram.h"/> 
+		<source-file src="src/ios/aj_target_serial.c"/> 
+		<source-file src="src/ios/aj_target_util.c"/> 
+		<header-file src="src/ios/aj_target.h"/>
+
+		<header-file src="src/ios/AllJoyn_Cordova.h"/>
+		<source-file src="src/ios/AllJoyn_Cordova.m"/> 
+	</platform>
 
 	<!-- windows8 -->
 	<platform name="windows8">
