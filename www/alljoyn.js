@@ -1,14 +1,13 @@
-var exec = require('cordova/exec');
+var argscheck = require('cordova/argscheck'),
+	utils = require('cordova/utils'),
+	exec = require('cordova/exec'),
+	cordova = require('cordova');
 
-module.exports = {
-
-    hello: function(callback, name) {
-        exec(callback, null, "AllJoyn", "hello", [name]);
-    },
-
-    discover: function(success, error) {
+var alljoyn = {
+	discover: function(success, error) {
 		argscheck.checkArgs('FF', 'allseen.alljoyn.discover', arguments);
-			exec(success, error, "AllJoyn", "discover", []);
+		exec(success, error, "AllJoyn", "discover", []);
 	}
-
 };
+
+module.exports = alljoyn;

@@ -1,66 +1,144 @@
 <?xml version="1.0" encoding="utf-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    id="org.allseen.alljoyn"
-    version="0.0.1">
-        
-    <name>AllJoyn</name>
-    <description>Cordova AllJoyn Plugin</description>
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	id="org.allseen.alljoyn"
+	version="0.0.1">
+		
+	<name>AllJoyn</name>
+	<description>Cordova AllJoyn Plugin</description>
 
-    <engines>
-        <engine name="cordova" version=">=3.1.0" />
-    </engines>
+	<engines>
+		<engine name="cordova" version=">=3.1.0" />
+	</engines>
 
-    <js-module src="www/alljoyn.js" name="allJoyn">
-        <merges target="allseen.alljoyn" />
-    </js-module>
+	<js-module src="www/alljoyn.js" name="allJoyn">
+		<merges target="allseen.alljoyn" />
+	</js-module>
 
-    <!-- android -->
-    <platform name="android">
-        <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="AllJoyn">
-                <param name="android-package" value="org.allseen.alljoyn.AllJoyn"/>
-                <!--<param name="onload" value="true"/>-->
-            </feature>
-        </config-file>
-                
-        <source-file src="src/android/AllJoyn.java" target-dir="src/org/allseen/alljoyn" />
-    </platform>
+	<!-- android -->
+	<platform name="android">
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="AllJoyn">
+				<param name="android-package" value="org.allseen.alljoyn.AllJoyn"/>
+				<!--<param name="onload" value="true"/>-->
+			</feature>
+		</config-file>
+				
+		<source-file src="src/android/AllJoyn.java" target-dir="src/org/allseen/alljoyn" />
+		<source-file src="src/android/alljoyn.jar" target-dir="libs" />    
+		<source-file src="src/android/armeabi/liballjoyn_java.so" target-dir="libs/armeabi" />    
+	</platform>
    
-    <!-- ios -->
-    <!--
-    <platform name="ios">
-        <config-file target="config.xml" parent="/*">
-            <feature name="AllJoyn">
-                <param name="ios-package" value="AllJoyn" />
-                <param name="onload" value="true"/>
-            </feature>
-        </config-file>
+	<!-- ios -->
 
-        <header-file src="HWPHello.h" />    
-        <source-file src="HWPHello.m" />    
-    </platform>-->
+	<platform name="ios">
+		<config-file target="config.xml" parent="/*">
+			<feature name="AllJoyn">
+				<param name="ios-package" value="AllJoyn_Cordova" />
+				<param name="onload" value="true"/>
+			</feature>
+		</config-file>
 
-    <!-- windows8 -->
-    <platform name="windows8">
-        <js-module src="src/windows8/AllJoynProxy.js" name="AllJoynProxy">
-            <merges target="" />
-        </js-module>
-        <!--
-        <framework src="src/windows8/AllJoynWinRTComponent.winmd" custom="true"/>-->
-         <framework src="src/windows8/AllJoynWinRTComponent/AllJoynWinRTComponent.vcxproj" custom="true" type="projectReference"/>
-    </platform>
+		<framework src="Security.framework" />
 
-    <!-- wp8 -->
-    <platform name="wp8">
-        <config-file target="config.xml" parent="/*">
-            <feature name="AllJoyn">
-                <param name="wp-package" value="AllJoyn"/>
-                <param name="onload" value="true"/>
-            </feature>
-        </config-file>
+		<source-file src="src/ajtcl/aj_about.c"/>
+		<header-file src="src/ajtcl/aj_about.h"/>
+		<header-file src="src/ajtcl/aj_auth_listener.h"/>
+		<source-file src="src/ajtcl/aj_bufio.c"/>
+		<header-file src="src/ajtcl/aj_bufio.h"/>
+		<source-file src="src/ajtcl/aj_bus.c"/>
+		<header-file src="src/ajtcl/aj_bus.h"/>
+		<source-file src="src/ajtcl/aj_cert.c"/>
+		<header-file src="src/ajtcl/aj_cert.h"/>
+		<header-file src="src/ajtcl/aj_config.h"/>
+		<source-file src="src/ajtcl/aj_connect.c"/>
+		<header-file src="src/ajtcl/aj_connect.h"/>
+		<source-file src="src/ajtcl/aj_crc16.c"/>
+		<header-file src="src/ajtcl/aj_crc16.h"/>
+		<source-file src="src/ajtcl/aj_creds.c"/>
+		<header-file src="src/ajtcl/aj_creds.h"/>
+		<source-file src="src/ajtcl/aj_crypto.c"/>
+		<header-file src="src/ajtcl/aj_crypto.h"/>
+		<source-file src="src/ajtcl/aj_crypto_ecc.c"/>
+		<header-file src="src/ajtcl/aj_crypto_ecc.h"/>
+		<source-file src="src/ajtcl/aj_crypto_sha2.c"/>
+		<header-file src="src/ajtcl/aj_crypto_sha2.h"/>
+		<source-file src="src/ajtcl/aj_debug.c"/>
+		<header-file src="src/ajtcl/aj_debug.h"/>
+		<source-file src="src/ajtcl/aj_disco.c"/>
+		<header-file src="src/ajtcl/aj_disco.h"/>
+		<source-file src="src/ajtcl/aj_guid.c"/>
+		<header-file src="src/ajtcl/aj_guid.h"/>
+		<source-file src="src/ajtcl/aj_helper.c"/>
+		<header-file src="src/ajtcl/aj_helper.h"/>
+		<source-file src="src/ajtcl/aj_init.c"/>
+		<header-file src="src/ajtcl/aj_init.h"/>
+		<source-file src="src/ajtcl/aj_introspect.c"/>
+		<header-file src="src/ajtcl/aj_introspect.h"/>
+		<source-file src="src/ajtcl/aj_keyauthentication.c"/>
+		<header-file src="src/ajtcl/aj_keyauthentication.h"/>
+		<source-file src="src/ajtcl/aj_keyexchange.c"/>
+		<header-file src="src/ajtcl/aj_keyexchange.h"/>
+		<source-file src="src/ajtcl/aj_link_timeout.c"/>
+		<header-file src="src/ajtcl/aj_link_timeout.h"/>
+		<source-file src="src/ajtcl/aj_msg.c"/>
+		<header-file src="src/ajtcl/aj_msg.h"/>
+		<header-file src="src/ajtcl/aj_msg_priv.h"/>
+		<header-file src="src/ajtcl/aj_net.h"/>
+		<source-file src="src/ajtcl/aj_nvram.c"/>
+		<header-file src="src/ajtcl/aj_nvram.h"/>
+		<source-file src="src/ajtcl/aj_peer.c"/>
+		<header-file src="src/ajtcl/aj_peer.h"/>
+		<source-file src="src/ajtcl/aj_serial.c"/>
+		<header-file src="src/ajtcl/aj_serial.h"/>
+		<source-file src="src/ajtcl/aj_serial_rx.c"/>
+		<header-file src="src/ajtcl/aj_serial_rx.h"/>
+		<source-file src="src/ajtcl/aj_serial_tx.c"/>
+		<header-file src="src/ajtcl/aj_serial_tx.h"/>
+		<header-file src="src/ajtcl/aj_serio.h"/>
+		<header-file src="src/ajtcl/aj_status.h"/>
+		<source-file src="src/ajtcl/aj_std.c"/>
+		<header-file src="src/ajtcl/aj_std.h"/>
+		<source-file src="src/ajtcl/aj_util.c"/>
+		<header-file src="src/ajtcl/aj_util.h"/>
+		<header-file src="src/ajtcl/aj_version.h"/>
+		<header-file src="src/ajtcl/aj_wifi_ctrl.h"/>
+		<header-file src="src/ajtcl/alljoyn.h"/>
+		<source-file src="src/ajtcl/sha2.c"/>
+		<header-file src="src/ajtcl/sha2.h"/> 
 
-        <source-file src="src/wp/AllJoyn.cs" />
-    </platform>
-    
+		<source-file src="src/ios/aj_net.c"/> 
+		<source-file src="src/ios/aj_sw_crypto.c"/> 
+		<source-file src="src/ios/aj_target_nvram.c"/> 
+		<header-file src="src/ios/aj_target_nvram.h"/> 
+		<source-file src="src/ios/aj_target_serial.c"/> 
+		<source-file src="src/ios/aj_target_util.c"/> 
+		<header-file src="src/ios/aj_target.h"/>
+
+		<header-file src="src/ios/AllJoyn_Cordova.h"/>
+		<source-file src="src/ios/AllJoyn_Cordova.m"/> 
+	</platform>
+
+	<!-- windows8 -->
+	<platform name="windows8">
+		<js-module src="src/windows8/AllJoynProxy.js" name="AllJoynProxy">
+			<merges target="" />
+		</js-module>
+		<!--
+		<framework src="src/windows8/AllJoynWinRTComponent.winmd" custom="true"/>-->
+		 <framework src="src/windows8/AllJoynWinRTComponent/AllJoynWinRTComponent.vcxproj" custom="true" type="projectReference"/>
+	</platform>
+
+	<!-- wp8 -->
+	<platform name="wp8">
+		<config-file target="config.xml" parent="/*">
+			<feature name="AllJoyn">
+				<param name="wp-package" value="AllJoyn"/>
+				<param name="onload" value="true"/>
+			</feature>
+		</config-file>
+
+		<source-file src="src/wp/AllJoyn.cs" />
+	</platform>
+	
 </plugin>
