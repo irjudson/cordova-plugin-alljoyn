@@ -12,5 +12,5 @@ Here are my current implementation plans:
 
 Caveats
 -------
-Only relevant to Windows work (and a problem for other platforms):
-Work is still in progress. Requires Cordova < 3.6 (Version 3.6 added Windows Universal App Support which breaks some project referencing. [Bug Filing](https://issues.apache.org/jira/browse/CB-7911)).
+~~Only relevant to Windows work (and a problem for other platforms):
+Work is still in progress. Requires Cordova < 3.6 (Version 3.6 added Windows Universal App Support which breaks some project referencing. [Bug Filing](https://issues.apache.org/jira/browse/CB-7911)).~~ Fix = https://github.com/apache/cordova-lib/pull/121
