@@ -15,6 +15,8 @@
 		<merges target="allseen.alljoyn" />
 	</js-module>
 
+  <hook type="after_plugin_add" src="scripts/afterPluginAdd.js" />
+
 	<!-- android -->
 	<platform name="android">
 		<config-file target="res/xml/config.xml" parent="/*">
