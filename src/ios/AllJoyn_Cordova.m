@@ -8,18 +8,23 @@
 
 @implementation AllJoyn_Cordova
 
-- (void)greet:(CDVInvokedUrlCommand*)command
+- (void)discover:(CDVInvokedUrlCommand*)command
 {
-
-    NSString* callbackId = [command callbackId];
-    NSString* name = [[command arguments] objectAtIndex:0];
-    NSString* msg = [NSString stringWithFormat: @"Hello, %@", name];
-
-    CDVPluginResult* result = [CDVPluginResult
-                               resultWithStatus:CDVCommandStatus_OK
-                               messageAsString:msg];
-
-    [self success:result callbackId:callbackId];
+    CDVPluginResult* pluginResult = nil;
+    NSMutableDictionary* discoveredDevices = [NSMutableDictionary dictionary];
+    
+    [discoveredDevices setObject: @"some data" forKey: @"device1"];
+    [discoveredDevices setObject: @"more data" forKey: @"device2"];
+    
+    if (true) {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:discoveredDevices];
+    } else {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+    }
+    
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 @end
+
+
