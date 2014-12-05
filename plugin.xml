@@ -128,8 +128,8 @@
 		<js-module src="src/windows/AllJoynProxy.js" name="AllJoynProxy">
 			<clobbers target="AllJoyn" />
 		</js-module>
-		<!--<framework src="src/windows/AllJoynWinRTComponent/AllJoynWinRTComponent.Windows.vcxproj" custom="true" type="projectReference" />-->
-		<framework src="src/windows/AllJoynWinRTComponent/AllJoynWinRTComponent.WindowsPhone.vcxproj" custom="true" type="projectReference" />
+		<framework src="src/windows/AllJoynWinRTComponent/AllJoynWinRTComponent.Windows.vcxproj" custom="true" type="projectReference" device="windows" />
+		<framework src="src/windows/AllJoynWinRTComponent/AllJoynWinRTComponent.WindowsPhone.vcxproj" custom="true" type="projectReference" device="phone" />
 	</platform>
 	
 </plugin>
