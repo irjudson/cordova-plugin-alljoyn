@@ -123,28 +123,6 @@
     <hook type="after_plugin_install" src="scripts/iOSAfterPluginInstall.js" />
 	</platform>
 
-	<!-- windows8 -->
-	<platform name="windows8">
-		<js-module src="src/windows8/AllJoynProxy.js" name="AllJoynProxy">
-			<merges target="" />
-		</js-module>
-		<!--
-		<framework src="src/windows8/AllJoynWinRTComponent.winmd" custom="true"/>-->
-		 <framework src="src/windows8/AllJoynWinRTComponent/AllJoynWinRTComponent.vcxproj" custom="true" type="projectReference"/>
-	</platform>
-
-	<!-- wp8 -->
-	<platform name="wp8">
-		<config-file target="config.xml" parent="/*">
-			<feature name="AllJoyn">
-				<param name="wp-package" value="AllJoyn"/>
-				<param name="onload" value="true"/>
-			</feature>
-		</config-file>
-
-		<source-file src="src/wp/AllJoyn.cs" />
-	</platform>
-
 	<!-- windows -->
 	<platform name="windows">
 		<js-module src="src/windows/AllJoynProxy.js" name="AllJoynProxy">
