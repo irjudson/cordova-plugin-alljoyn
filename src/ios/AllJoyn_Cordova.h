@@ -2,6 +2,6 @@
 
 @interface AllJoyn_Cordova : CDVPlugin
 
-- (void) discover:(CDVInvokedUrlCommand*)command;
+- (void) initialize:(CDVInvokedUrlCommand*)command;
 
 @end
