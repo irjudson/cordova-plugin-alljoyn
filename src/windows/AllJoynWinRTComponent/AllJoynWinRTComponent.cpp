@@ -156,12 +156,9 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 // Testing
 //////////////////////////////////////////////////////////////////////////////////////////
 
-extern int AJ_Main(void);
-
 IAsyncOperation<String^>^ AllJoynWinRTComponent::AllJoyn::Test() {
 	return create_async([]() -> String^ 
 	{
-		AJ_Main();
 		return "To be implemented";
 	});
 }
