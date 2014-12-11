@@ -129,6 +129,7 @@ namespace AllJoynWinRTComponent
 		virtual ~AllJoyn();
 
 		static void AJ_Initialize();
+		static void AJ_PrintXML(const Array<AJ_Object^>^ localObjects);
 		static void AJ_RegisterObjects(const Array<AJ_Object^>^ localObjects, const Array<AJ_Object^>^ proxyObjects);
 		static AJ_Status AJ_StartClient(AJ_BusAttachment^ bus,
 										String^ daemonName,

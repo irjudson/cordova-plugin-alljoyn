@@ -82,6 +82,7 @@ void AllJoynWinRTComponent::AllJoyn::AJ_Initialize()
 				ZeroMemory(interfaces, sizeof(interfaces));
 				for (int j = 0; j < nInterfaces; j++)
 				{
+					_interfaces[j] = NULL;
 					if (objects[i]->interfaces->GetAt(j))
 					{
 						int nEntries = objects[i]->interfaces->GetAt(j)->Size;
@@ -89,8 +90,12 @@ void AllJoynWinRTComponent::AllJoyn::AJ_Initialize()
 						ZeroMemory(interfaces[j], sizeof(interfaces[j]));
 						for (int k = 0; k < nEntries; k++)
 						{
-							char* entry = new char[MAX_STR_LENGTH];
-							AJ_StringToChars(objects[i]->interfaces->GetAt(j)->GetAt(k), entry);
+							char* entry = NULL;
+							if (objects[i]->interfaces->GetAt(j)->GetAt(k))
+							{
+								entry = new char[MAX_STR_LENGTH];
+								AJ_StringToChars(objects[i]->interfaces->GetAt(j)->GetAt(k), entry);
+							}
 							interfaces[j][k] = entry;
 						}
 						_interfaces[j] = interfaces[j];
@@ -106,6 +111,13 @@ void AllJoynWinRTComponent::AllJoyn::AJ_Initialize()
 	}
 
 	return _objects;
+}
+
+
+void AllJoynWinRTComponent::AllJoyn::AJ_PrintXML(const Array<AJ_Object^>^ objects)
+{
+	::AJ_Object* _objects = AllJoynWinRTComponent::AllJoyn::RegisterObject(objects);
+	::AJ_PrintXML(_objects);
 }
 
 
