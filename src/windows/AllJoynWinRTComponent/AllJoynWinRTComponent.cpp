@@ -125,7 +125,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 	uint8_t connected,
 	String^ name,
 	uint16_t port,
-	uint32_t sessionId,
+	uint32_t* sessionId,
 	AllJoynWinRTComponent::AJ_SessionOpts^ opts)
 {
 	::AJ_BusAttachment _bus;
@@ -146,7 +146,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 		STRUCT_COPY(opts, transports);
 	}
 
-	::AJ_Status status = ::AJ_StartClient(&_bus, _daemonName, timeout, connected, _name, port, &sessionId, _opts);
+	::AJ_Status status = ::AJ_StartClient(&_bus, _daemonName, timeout, connected, _name, port, sessionId, _opts);
 
 	return (static_cast<AJ_Status>(status));
 }
@@ -156,9 +156,12 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 // Testing
 //////////////////////////////////////////////////////////////////////////////////////////
 
+extern int AJ_Main(void);
+
 IAsyncOperation<String^>^ AllJoynWinRTComponent::AllJoyn::Test() {
 	return create_async([]() -> String^ 
 	{
+		AJ_Main();
 		return "To be implemented";
 	});
 }

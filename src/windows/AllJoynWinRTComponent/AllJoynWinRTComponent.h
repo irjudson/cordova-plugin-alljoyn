@@ -136,7 +136,7 @@ namespace AllJoynWinRTComponent
 										uint8_t connected,
 										String^ name,
 										uint16_t port,
-										uint32_t sessionId,
+										uint32_t* sessionId,
 										AJ_SessionOpts^ opts);
 
 		// Testing
