@@ -20,7 +20,7 @@ using namespace Windows::Foundation;
 #define AJ_PRX_ID_FLAG   0x02  /**< Identifies that a message belongs to the set of objects implemented by remote peers */
 
 
-#define STRUCT_COPY(name, attrib) _ ## name.attrib = name->attrib
+#define STRUCT_COPY(name, attrib) _ ## name->attrib = name->attrib
 
 #define NULLABLE_TYPE_COPY(type, name)										\
 	type* _ ## name = NULL;													\
@@ -117,30 +117,36 @@ void AllJoynWinRTComponent::AllJoyn::AJ_RegisterObjects(const Array<AJ_Object^>^
 }
 
 
-AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient(AllJoynWinRTComponent::AJ_BusAttachment^ bus,
-																				String^ daemonName,
-																				uint32_t timeout,
-																				uint8_t connected,
-																				String^ name,
-																				uint16_t port,
-																				uint32_t sessionId,
-																				AllJoynWinRTComponent::AJ_SessionOpts^ opts)
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
+(
+	AllJoynWinRTComponent::AJ_BusAttachment^ bus,
+	String^ daemonName,
+	uint32_t timeout,
+	uint8_t connected,
+	String^ name,
+	uint16_t port,
+	uint32_t sessionId,
+	AllJoynWinRTComponent::AJ_SessionOpts^ opts)
 {
 	::AJ_BusAttachment _bus;
 
 	WCS2MBS(daemonName);
 	WCS2MBS(name);
 
-	::AJ_SessionOpts _opts;
+	::AJ_SessionOpts* _opts = NULL;
+
 	if (opts)
 	{
+		_opts = new ::AJ_SessionOpts();
+		ZeroMemory(_opts, sizeof(_opts));
+
 		STRUCT_COPY(opts, isMultipoint);
 		STRUCT_COPY(opts, proximity);
 		STRUCT_COPY(opts, traffic);
 		STRUCT_COPY(opts, transports);
 	}
 
-	::AJ_Status status = ::AJ_StartClient(&_bus, _daemonName, timeout, connected, _name, port, &sessionId, &_opts);
+	::AJ_Status status = ::AJ_StartClient(&_bus, _daemonName, timeout, connected, _name, port, &sessionId, _opts);
 
 	return (static_cast<AJ_Status>(status));
 }
