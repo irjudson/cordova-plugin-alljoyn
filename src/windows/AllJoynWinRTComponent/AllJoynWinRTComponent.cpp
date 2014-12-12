@@ -12,6 +12,7 @@
 using namespace concurrency;
 
 using namespace Platform;
+using namespace Platform::Collections;
 using namespace Windows::Foundation;
 
 
@@ -37,6 +38,28 @@ using namespace Windows::Foundation;
 	char* _ ## string = (string == nullptr) ? NULL : __ ## string			\
 
 
+#define SAFE_DEL(p)															\
+	if (p)																	\
+	{																		\
+		delete p;															\
+		p = NULL;															\
+	}
+
+
+#define SAFE_DEL_ARRAY(p)													\
+	if (p)																	\
+	{																		\
+		delete[] p;															\
+		p = NULL;															\
+	}
+
+
+static ::AJ_Object* _s_cachedLocalObjects = NULL;
+static ::AJ_Object* _s_cachedProxyObjects = NULL;
+static const Array<AllJoynWinRTComponent::AJ_Object^>^ s_cachedLocalObjects;
+static const Array<AllJoynWinRTComponent::AJ_Object^>^ s_cachedProxyObjects;
+
+
 AllJoynWinRTComponent::AllJoyn::AllJoyn()
 {
 }
@@ -44,7 +67,6 @@ AllJoynWinRTComponent::AllJoyn::AllJoyn()
 
 AllJoynWinRTComponent::AllJoyn::~AllJoyn()
 {
-	// Phong TODO: free mem
 }
 
 
@@ -54,7 +76,59 @@ void AllJoynWinRTComponent::AllJoyn::AJ_Initialize()
 }
 
 
-::AJ_Object* AllJoynWinRTComponent::AllJoyn::RegisterObject(const Array<AJ_Object^>^ objects)
+void AllJoynWinRTComponent::AllJoyn::ReleaseObjects(::AJ_Object* _objects, const Array<AJ_Object^>^ objects)
+{
+	if (_objects == NULL)
+	{
+		return;
+	}
+
+	int nObjects = objects->Length;
+
+	for (int j = 0; j < nObjects; j++)
+	{
+		if (_objects[j].path)
+		{
+			// Free path
+			SAFE_DEL(_objects[j].path);
+
+			// Free interfaces
+			int nInterfaces = objects[j]->interfaces->Size;
+
+			for (int k = 0; k < nInterfaces; k++)
+			{
+				if (_objects[j].interfaces[k])
+				{
+					int nEntries = objects[j]->interfaces->GetAt(k)->Size;
+
+					for (int m = 0; m < nEntries; m++)
+					{
+						if (_objects[j].interfaces[k][m])
+						{
+							delete _objects[j].interfaces[k][m];
+						}
+					}
+
+					delete[] _objects[j].interfaces[k];
+				}
+			}
+
+			SAFE_DEL_ARRAY(_objects[j].interfaces);
+		}
+	}
+
+	SAFE_DEL_ARRAY(_objects);
+}
+
+
+void AllJoynWinRTComponent::AllJoyn::AJ_ReleaseObjects()
+{
+	ReleaseObjects(_s_cachedLocalObjects, s_cachedLocalObjects);
+	ReleaseObjects(_s_cachedProxyObjects, s_cachedProxyObjects);
+}
+
+
+::AJ_Object* AllJoynWinRTComponent::AllJoyn::RegisterObjects(const Array<AJ_Object^>^ objects)
 {
 	::AJ_Object* _objects = NULL;
 
@@ -116,16 +190,31 @@ void AllJoynWinRTComponent::AllJoyn::AJ_Initialize()
 
 void AllJoynWinRTComponent::AllJoyn::AJ_PrintXML(const Array<AJ_Object^>^ objects)
 {
-	::AJ_Object* _objects = AllJoynWinRTComponent::AllJoyn::RegisterObject(objects);
+	::AJ_Object* _objects = AllJoynWinRTComponent::AllJoyn::RegisterObjects(objects);
+#if _DEBUG
 	::AJ_PrintXML(_objects);
+#endif
+	ReleaseObjects(_objects, objects);
 }
 
 
 void AllJoynWinRTComponent::AllJoyn::AJ_RegisterObjects(const Array<AJ_Object^>^ localObjects, const Array<AJ_Object^>^ proxyObjects)
 {
-	::AJ_Object* _localObjects = AllJoynWinRTComponent::AllJoyn::RegisterObject(localObjects);
-	::AJ_Object* _proxyObjects = AllJoynWinRTComponent::AllJoyn::RegisterObject(proxyObjects);
-	::AJ_RegisterObjects(_localObjects, _proxyObjects);
+	// Free the old objects first
+	if (_s_cachedLocalObjects)
+	{
+		ReleaseObjects(_s_cachedLocalObjects, s_cachedLocalObjects);
+		ReleaseObjects(_s_cachedProxyObjects, s_cachedProxyObjects);
+	}
+
+	// Cache the objects
+	_s_cachedLocalObjects = AllJoynWinRTComponent::AllJoyn::RegisterObjects(localObjects);
+	_s_cachedProxyObjects = AllJoynWinRTComponent::AllJoyn::RegisterObjects(proxyObjects);
+	s_cachedLocalObjects = localObjects;
+	s_cachedProxyObjects = proxyObjects;
+
+	// Register the objects
+	::AJ_RegisterObjects(_s_cachedLocalObjects, _s_cachedProxyObjects);
 }
 
 
@@ -168,9 +257,17 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 // Testing
 //////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef INCLUDE_C_SAMPLE_APPS
+extern int AJ_Main(void);
+#endif // INCLUDE_C_SAMPLE_APPS
+
 IAsyncOperation<String^>^ AllJoynWinRTComponent::AllJoyn::Test() {
 	return create_async([]() -> String^ 
 	{
+#ifdef INCLUDE_C_SAMPLE_APPS
+		AJ_Main();
+#endif // INCLUDE_C_SAMPLE_APPS
+
 		return "To be implemented";
 	});
 }

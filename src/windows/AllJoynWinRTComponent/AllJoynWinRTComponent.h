@@ -9,6 +9,10 @@ using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 
 
+#ifdef AJ_PrintXML(objs)
+#undef AJ_PrintXML(objs)
+#endif // AJ_PrintXML(objs)
+
 
 namespace AllJoynWinRTComponent
 {
@@ -139,6 +143,8 @@ namespace AllJoynWinRTComponent
 										uint16_t port,
 										uint32_t* sessionId,
 										AJ_SessionOpts^ opts);
+		static void AJ_ReleaseObjects();
+
 
 		// Testing
 		static IAsyncOperation<String^>^ Test();
@@ -146,7 +152,8 @@ namespace AllJoynWinRTComponent
 		static IAsyncAction^ Initialize();
 
 	private:
-		static ::AJ_Object* RegisterObject(const Array<AJ_Object^>^ objects);
+		static ::AJ_Object* RegisterObjects(const Array<AJ_Object^>^);
+		static void ReleaseObjects(::AJ_Object*, const Array<AJ_Object^>^);
     };
 }
 
