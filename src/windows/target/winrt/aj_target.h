@@ -79,8 +79,8 @@ typedef unsigned long long uint64_t;  /** 64-bit unsigned integer */
 					static char mbsLogFile[1024];														\
 																										\
 					wcscpy(wcsLogFile, path);															\
-					wcsncat(wcsLogFile, logFilename, wcslen(logFilename));								\
-					wcstombs(mbsLogFile, wcsLogFile, wcslen(wcsLogFile));								\
+					wcsncat(wcsLogFile, logFilename, 1024);												\
+					wcstombs(mbsLogFile, wcsLogFile, 1024);												\
 																										\
 					FILE* pFile = fopen(mbsLogFile, "a");												\
 					if (pFile)																			\

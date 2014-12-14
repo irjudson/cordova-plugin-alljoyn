@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 
-#define MAX_STRING_LENGTH WCHAR_MAX >> 2
+#define MAX_STR_LENGTH WCHAR_MAX >> 2
 
 #if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 
@@ -29,7 +29,7 @@
 #define AJ_StringToChars(string, chars)									\
 	if (chars)															\
 	{																	\
-		wcstombs(chars, string->Data(), strlen(chars));					\
+		wcstombs(chars, string->Data(), MAX_STR_LENGTH);				\
 	}
 
 // Convert char* to Platform::String^

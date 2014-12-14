@@ -52,9 +52,9 @@ Platform::String^ AJ_CharsToString(const char* x)
 		return nullptr;
 	}
 
-	static WCHAR wcs[MAX_STRING_LENGTH];
+	static WCHAR wcs[MAX_STR_LENGTH];
 	static size_t nChars = 0;
-	mbstowcs_s(&nChars, wcs, MAX_STRING_LENGTH, x, _TRUNCATE);
+	mbstowcs_s(&nChars, wcs, MAX_STR_LENGTH, x, _TRUNCATE);
 
 	return ref new Platform::String(wcs);
 }

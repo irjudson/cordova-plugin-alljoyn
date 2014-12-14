@@ -9,9 +9,9 @@ using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 
 
-#ifdef AJ_PrintXML(objs)
-#undef AJ_PrintXML(objs)
-#endif // AJ_PrintXML(objs)
+#ifdef AJ_PrintXML
+#undef AJ_PrintXML
+#endif // AJ_PrintXML
 
 
 namespace AllJoynWinRTComponent
@@ -89,7 +89,7 @@ namespace AllJoynWinRTComponent
 	*/
 	public ref struct AJ_BusAttachment sealed
 	{
-	private public:
+	internal:
 		::AJ_BusAttachment* _bus;
 	};
 
@@ -119,7 +119,7 @@ namespace AllJoynWinRTComponent
 	*/
 	public ref struct AJ_Message sealed
 	{
-	private public:
+	internal:
 		::AJ_Message* _msg;
 	};
 
@@ -128,7 +128,7 @@ namespace AllJoynWinRTComponent
 	*/
 	public ref struct AJ_Arg sealed
 	{
-	private public:
+	internal:
 		::AJ_Arg* _arg;
 	};
 

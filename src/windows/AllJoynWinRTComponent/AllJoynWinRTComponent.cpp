@@ -31,11 +31,10 @@ using namespace Windows::Foundation;
 		*_ ## name = name->Value;											\
 	}																		\
 
-#define MAX_STR_LENGTH 1024
 
 #define WCS2MBS(string)														\
 	char __ ## string[MAX_STR_LENGTH];										\
-	wcstombs(__ ## string, string->Data(), strlen(__ ## string));			\
+	wcstombs(__ ## string, string->Data(), MAX_STR_LENGTH);					\
 	char* _ ## string = (string == nullptr) ? NULL : __ ## string			\
 
 
