@@ -266,23 +266,29 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMetho
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args)
 {
+	::AJ_Status _status;
+
 	WCS2MBS(signature);
 
 	// Phong TODO: replace va_list
 	char parameter1[MAX_STR_LENGTH];
 	char parameter2[MAX_STR_LENGTH];
 
-	if (args->Length >= 1)
+	if (args->Length == 0)
+	{
+		_status = ::AJ_MarshalArgs(msg->_msg, _signature);
+	}
+	else if (args->Length == 1)
 	{
 		AJ_StringToChars(args[0], parameter1);
+		_status = ::AJ_MarshalArgs(msg->_msg, _signature, parameter1);
 	}
-
-	if (args->Length >= 2)
+	else if (args->Length == 2)
 	{
+		AJ_StringToChars(args[0], parameter1);
 		AJ_StringToChars(args[1], parameter2);
+		_status = ::AJ_MarshalArgs(msg->_msg, _signature, parameter1, parameter2);
 	}
-
-	::AJ_Status _status = ::AJ_MarshalArgs(msg->_msg, _signature, parameter1, parameter2);
 
 	return (static_cast<AJ_Status>(_status));
 }
