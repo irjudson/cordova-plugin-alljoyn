@@ -16,8 +16,23 @@ using namespace Windows::Foundation::Collections;
 
 namespace AllJoynWinRTComponent
 {
+	/**
+	* Type for an interface description - NULL terminated array of strings.
+	*/
 	typedef IVector<IVector<String^>^>^ AJ_InterfaceDescription;
 
+	/**
+	* Prototype for a function provided by the property store for getting ANNOUNCE and ABOUT properties
+	*
+	* @param reply     The message to marshal the property values into. The getter can also figure out
+	*                  from the msgId in the reply message if the reply is for ANNOUNCE or ABOUT.
+	*
+	* @param language  The language to use to return the string properties. If this is NULL the default
+	*                  language will be used.
+	*
+	* @return   Return AJ_OK if the properties were succesfully marshaled into the reply.
+	*
+	*/
 	public enum class AJ_Status
 	{
 		AJ_OK = 0,  /**< Success status */
@@ -69,45 +84,18 @@ namespace AllJoynWinRTComponent
 
 	};
 
-	public ref struct AJ_IOBuffer sealed
-	{
-		property uint8_t direction;								/**< I/O buffer is either a Tx buffer or an Rx buffer */
-		property uint16_t bufSize;								/**< Size of the data buffer */
-		property IBox<uint8_t>^ bufStart;						/**< Start for the data buffer */
-		property IBox<uint8_t>^ readPtr;						/**< Current position in buf for reading data */
-		property IBox<uint8_t>^ writePtr;						/**< Current position in buf for writing data */
-
-		// Phong TODO
-		///*
-		//* Function pointer to send or recv function
-		//*/
-		//union 
-		//{
-		//	AJ_TxFunc send;
-		//	AJ_RxFunc recv;
-		//};
-		//void* context;										/**< Abstracted context for managing I/O */
-	};
-
-	public ref struct AJ_NetSocket sealed
-	{
-		property AJ_IOBuffer^ tx;								/**< transmit network socket */
-		property AJ_IOBuffer^ rx;								/**< receive network socket */
-	};
-
+	/**
+	* Type for a bus attachment
+	*/
 	public ref struct AJ_BusAttachment sealed
 	{
-		property uint16_t aboutPort;							/**< The port to use in announcements */
-		property String^ uniqueName;							/**< The unique name returned by the hello message */
-		property AJ_NetSocket^ sock;							/**< Abstracts a network socket */
-		property uint32_t serial;								/**< Next outgoing message serial number */
-		// Phong TODO
-		//AJ_AuthPwdFunc pwdCallback;							/**< Callback for obtaining passwords */
-		//AJ_AuthListenerFunc authListenerCallback;				/**< Callback for obtaining passwords */
-		property IBox<uint32_t>^ suites;						/**< Supported cipher suites */
-		property size_t numsuites;								/**< Number of supported cipher suites */
+	private public:
+		::AJ_BusAttachment* _bus;
 	};
 
+	/**
+	* Type for describing session options
+	*/
 	public ref struct AJ_SessionOpts sealed
 	{
 		property uint8_t traffic;								/**< traffic type */
@@ -116,16 +104,99 @@ namespace AllJoynWinRTComponent
 		property uint32_t isMultipoint;							/**< multi-point session capable */
 	};
 
+	/**
+	* Type for an AllJoyn object description
+	*/
 	public ref struct AJ_Object sealed
 	{
 		property String^ path;									/**< object path */
 		property AJ_InterfaceDescription interfaces;			/**< interface descriptor */
 		property uint8_t flags;                                 /**< flags for the object */
-
-		// Phong TODO
-		//void* context;										/**< an application provided context pointer for this object */
 	};
 
+	/**
+	* Type for a message argument
+	*/
+	public ref struct AJ_Arg sealed
+	{
+		property uint8_t typeId;								/**< the argument type */
+		property uint8_t flags;									/**< non-zero if the value is a variant - values > 1 indicate variant-of-variant etc. */
+		property uint16_t len;									/**< length of a string or array in bytes */
+
+		// Phong TODO
+		///*
+		//* Union of the various argument values.
+		//*/
+		//union {
+		//	uint8_t*     v_byte;        /**< byte type field value in the message */
+		//	int16_t*     v_int16;       /**< int16 type field value in the message */
+		//	uint16_t*    v_uint16;      /**< uint16 type field value in the message */
+		//	uint32_t*    v_bool;        /**< boolean type field value in the message */
+		//	uint32_t*    v_uint32;      /**< uint32 type field value in the message */
+		//	int32_t*     v_int32;       /**< int32 type field value in the message */
+		//	int64_t*     v_int64;       /**< int64 type field value in the message */
+		//	uint64_t*    v_uint64;      /**< uint64 type field value in the message */
+		//	double*      v_double;      /**< double type field value in the message */
+		//	const char*  v_string;      /**< string(char *) type field value in the message */
+		//	const char*  v_objPath;     /**< objPath(char *) type field value in the message */
+		//	const char*  v_signature;   /**< signature(char *) type field value in the message */
+		//	const void*  v_data;        /**< data(void *) type field value in the message */
+		//} val;                          /**< union of the field value in the message */
+
+		property String^ sigPtr;								/**< pointer to the signature */
+		property AJ_Arg^ container;								/**< container argument */
+	};
+
+	/**
+	* AllJoyn Message Header
+	*/
+	public ref struct AJ_MsgHeader sealed
+	{
+		property uint8_t endianess;								/**< The endianness of this message */
+		property uint8_t msgType;								/**< Indicates if the message is method call, signal, etc. */
+		property uint8_t flags;									/**< Flag bits */
+		property uint8_t majorVersion;							/**< Major version of this message */
+		property uint32_t bodyLen;								/**< Length of the body data */
+		property uint32_t serialNum;							/**< serial of this message */
+		property uint32_t headerLen;							/**< Length of the header data */
+	};
+
+	/**
+	* AllJoyn Message
+	*/
+	public ref struct AJ_Message sealed
+	{
+		property uint32_t msgId;								/**< Identifies the message to the application */
+		property AJ_MsgHeader^ hdr;								/**< The message header */
+		// Phong TODO
+		//union {
+		//	const char* objPath;   /**< The nul terminated object path string or NULL */
+		//	uint32_t replySerial;  /**< The reply serial number */
+		//};
+		//union {
+		//	const char* member;    /**< The nul terminated member name string or NULL */
+		//	const char* error;     /**< The nul terminated error name string or NULL */
+		//};
+		property String^ iface;									/**< The nul terminated interface string or NULL */
+		property String^ sender;								/**< The nul terminated sender string or NULL */
+		property String^ destination;							/**< The nul terminated destination string or NULL */
+		property String^ signature;								/**< The nul terminated signature string or NULL */
+		property uint32_t sessionId;							/**< Session id */
+		property uint32_t timestamp;							/**< Timestamp */
+		property uint32_t ttl;									/**< Time to live */
+		/*
+		* Private message state - the application should not touch this data
+		*/
+		property uint8_t sigOffset;								/**< Offset to current position in the signature */
+		property uint8_t varOffset;								/**< For variant marshalling/unmarshalling - Offset to start of variant signature */
+		property uint16_t bodyBytes;							/**< Running count of the number body bytes written */
+		property AJ_BusAttachment^ bus;							/**< Bus attachment for this message */
+		property AJ_Arg^ outer;									/**< Container arg current being marshaled */
+	};
+
+	/**
+	* AllJoyn Windows Runtime
+	*/
     public ref class AllJoyn sealed
     {
     public:
@@ -144,6 +215,7 @@ namespace AllJoynWinRTComponent
 										uint32_t* sessionId,
 										AJ_SessionOpts^ opts);
 		static void AJ_ReleaseObjects();
+		static AJ_Status AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^* msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout);
 
 
 		// Testing
@@ -154,7 +226,10 @@ namespace AllJoynWinRTComponent
 	private:
 		static ::AJ_Object* RegisterObjects(const Array<AJ_Object^>^);
 		static void ReleaseObjects(::AJ_Object*, const Array<AJ_Object^>^);
+
+		// Helper functions
+		static AJ_Message^ CPPCX2C(::AJ_Message* msg);
+		static AJ_MsgHeader^ CPPCX2C(::AJ_MsgHeader* hdr);
+		static AJ_Arg^ CPPCX2C(::AJ_Arg* arg);
     };
 }
-
-#undef AJ_InterfaceDescription

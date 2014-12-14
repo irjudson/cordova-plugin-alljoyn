@@ -47,6 +47,11 @@ extern "C"
 
 Platform::String^ AJ_CharsToString(const char* x)
 {
+	if (!x)
+	{
+		return nullptr;
+	}
+
 	static WCHAR wcs[MAX_STRING_LENGTH];
 	static size_t nChars = 0;
 	mbstowcs_s(&nChars, wcs, MAX_STRING_LENGTH, x, _TRUNCATE);

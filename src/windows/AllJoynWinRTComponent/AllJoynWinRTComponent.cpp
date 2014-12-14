@@ -6,6 +6,7 @@
 #include "aj_util.h"
 #include "aj_target_util.h"
 #include "aj_helper.h"
+#include "aj_msg.h"
 
 #include <ppltasks.h>
 
@@ -229,7 +230,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 	uint32_t* sessionId,
 	AllJoynWinRTComponent::AJ_SessionOpts^ opts)
 {
-	::AJ_BusAttachment _bus;
+	::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
 
 	WCS2MBS(daemonName);
 	WCS2MBS(name);
@@ -247,11 +248,96 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 		STRUCT_COPY(opts, transports);
 	}
 
-	::AJ_Status status = ::AJ_StartClient(&_bus, _daemonName, timeout, connected, _name, port, sessionId, _opts);
+	::AJ_Status _status = ::AJ_StartClient(_bus, _daemonName, timeout, connected, _name, port, sessionId, _opts);
+	bus->_bus = _bus;
 
-	return (static_cast<AJ_Status>(status));
+	return (static_cast<AJ_Status>(_status));
 }
 
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^* msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout)
+{
+	::AJ_Message* _msg = new ::AJ_Message();
+	WCS2MBS(destination);
+	::AJ_Status _status = ::AJ_MarshalMethodCall(bus->_bus, _msg, msgId, _destination, sessionId, flags, timeout);
+	*msg = CPPCX2C(_msg);
+
+	// Memory cleanup
+	SAFE_DEL(_msg);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Helper functions
+//////////////////////////////////////////////////////////////////////////////////////////
+
+AllJoynWinRTComponent::AJ_Arg^ AllJoynWinRTComponent::AllJoyn::CPPCX2C(::AJ_Arg* _arg)
+{
+	if (_arg == NULL)
+	{
+		return nullptr;
+	}
+
+	AllJoynWinRTComponent::AJ_Arg^ arg = ref new AllJoynWinRTComponent::AJ_Arg();
+
+	STRUCT_COPY(arg, typeId);
+	STRUCT_COPY(arg, flags);
+	STRUCT_COPY(arg, len);
+	arg->sigPtr = AJ_CharsToString(_arg->sigPtr);
+	arg->container = arg;
+
+	return arg;
+}
+
+AllJoynWinRTComponent::AJ_MsgHeader^ AllJoynWinRTComponent::AllJoyn::CPPCX2C(::AJ_MsgHeader* _hdr)
+{
+	if (_hdr == NULL)
+	{
+		return nullptr;
+	}
+
+	AllJoynWinRTComponent::AJ_MsgHeader^ hdr = ref new AllJoynWinRTComponent::AJ_MsgHeader();
+
+	STRUCT_COPY(hdr, endianess);
+	STRUCT_COPY(hdr, msgType);
+	STRUCT_COPY(hdr, flags);
+	STRUCT_COPY(hdr, majorVersion);
+	STRUCT_COPY(hdr, bodyLen);
+	STRUCT_COPY(hdr, serialNum);
+	STRUCT_COPY(hdr, headerLen);
+
+	return hdr;
+}
+
+
+AllJoynWinRTComponent::AJ_Message^ AllJoynWinRTComponent::AllJoyn::CPPCX2C(::AJ_Message* _msg)
+{
+	if (_msg == NULL)
+	{
+		return nullptr;
+	}
+
+	AllJoynWinRTComponent::AJ_Message^ msg = ref new AllJoynWinRTComponent::AJ_Message();
+
+	STRUCT_COPY(msg, msgId);
+	msg->hdr = CPPCX2C(_msg->hdr);
+	msg->iface = AJ_CharsToString(_msg->iface);
+	msg->sender = AJ_CharsToString(_msg->sender);
+	msg->destination = AJ_CharsToString(_msg->destination);
+	msg->signature = AJ_CharsToString(_msg->signature);
+	STRUCT_COPY(msg, sessionId);
+	STRUCT_COPY(msg, timestamp);
+	STRUCT_COPY(msg, ttl);
+	STRUCT_COPY(msg, sigOffset);
+	STRUCT_COPY(msg, varOffset);
+	STRUCT_COPY(msg, bodyBytes);
+	msg->bus = ref new AJ_BusAttachment();
+	msg->bus->_bus = _msg->bus;
+	msg->outer = CPPCX2C(_msg->outer);
+
+	return msg;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Testing
