@@ -255,88 +255,105 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 }
 
 
-AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^* msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout)
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout)
 {
-	::AJ_Message* _msg = new ::AJ_Message();
+	msg->_msg = new ::AJ_Message();
 	WCS2MBS(destination);
-	::AJ_Status _status = ::AJ_MarshalMethodCall(bus->_bus, _msg, msgId, _destination, sessionId, flags, timeout);
-	*msg = CPPCX2C(_msg);
-
-	// Memory cleanup
-	SAFE_DEL(_msg);
+	::AJ_Status _status = ::AJ_MarshalMethodCall(bus->_bus, msg->_msg, msgId, _destination, sessionId, flags, timeout);
 
 	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args)
+{
+	WCS2MBS(signature);
+
+	// Phong TODO: replace va_list
+	char parameter1[MAX_STR_LENGTH];
+	char parameter2[MAX_STR_LENGTH];
+
+	if (args->Length >= 1)
+	{
+		AJ_StringToChars(args[0], parameter1);
+	}
+
+	if (args->Length >= 2)
+	{
+		AJ_StringToChars(args[1], parameter2);
+	}
+
+	::AJ_Status _status = ::AJ_MarshalArgs(msg->_msg, _signature, parameter1, parameter2);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_DeliverMsg(AJ_Message^ msg)
+{
+	::AJ_Status _status = ::AJ_DeliverMsg(msg->_msg);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseMsg(AJ_Message^ msg)
+{
+	::AJ_Status _status = ::AJ_CloseMsg(msg->_msg);
+	SAFE_DEL(msg->_msg);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout)
+{
+	if (!msg->_msg)
+	{
+		SAFE_DEL(msg->_msg);
+		msg->_msg = new ::AJ_Message();
+	}
+
+	::AJ_Status _status = ::AJ_UnmarshalMsg(bus->_bus, msg->_msg, timeout);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArg(AJ_Message^ msg, AJ_Arg^ arg)
+{
+	if (!arg->_arg)
+	{
+		SAFE_DEL(arg->_arg);
+		arg->_arg = new ::AJ_Arg();
+	}
+
+	::AJ_Status _status = ::AJ_UnmarshalArg(msg->_msg, arg->_arg);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseArg(AJ_Arg^ arg)
+{
+	SAFE_DEL(arg->_arg);
+
+	return AJ_Status::AJ_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Helper functions
 //////////////////////////////////////////////////////////////////////////////////////////
 
-AllJoynWinRTComponent::AJ_Arg^ AllJoynWinRTComponent::AllJoyn::CPPCX2C(::AJ_Arg* _arg)
+uint32_t AllJoynWinRTComponent::AllJoyn::Get_AJ_Message_msgId(AJ_Message^ msg)
 {
-	if (_arg == NULL)
-	{
-		return nullptr;
-	}
-
-	AllJoynWinRTComponent::AJ_Arg^ arg = ref new AllJoynWinRTComponent::AJ_Arg();
-
-	STRUCT_COPY(arg, typeId);
-	STRUCT_COPY(arg, flags);
-	STRUCT_COPY(arg, len);
-	arg->sigPtr = AJ_CharsToString(_arg->sigPtr);
-	arg->container = arg;
-
-	return arg;
-}
-
-AllJoynWinRTComponent::AJ_MsgHeader^ AllJoynWinRTComponent::AllJoyn::CPPCX2C(::AJ_MsgHeader* _hdr)
-{
-	if (_hdr == NULL)
-	{
-		return nullptr;
-	}
-
-	AllJoynWinRTComponent::AJ_MsgHeader^ hdr = ref new AllJoynWinRTComponent::AJ_MsgHeader();
-
-	STRUCT_COPY(hdr, endianess);
-	STRUCT_COPY(hdr, msgType);
-	STRUCT_COPY(hdr, flags);
-	STRUCT_COPY(hdr, majorVersion);
-	STRUCT_COPY(hdr, bodyLen);
-	STRUCT_COPY(hdr, serialNum);
-	STRUCT_COPY(hdr, headerLen);
-
-	return hdr;
+	return msg->_msg->msgId;
 }
 
 
-AllJoynWinRTComponent::AJ_Message^ AllJoynWinRTComponent::AllJoyn::CPPCX2C(::AJ_Message* _msg)
+String^ AllJoynWinRTComponent::AllJoyn::Get_AJ_Arg_v_string(AJ_Arg^ arg)
 {
-	if (_msg == NULL)
-	{
-		return nullptr;
-	}
-
-	AllJoynWinRTComponent::AJ_Message^ msg = ref new AllJoynWinRTComponent::AJ_Message();
-
-	STRUCT_COPY(msg, msgId);
-	msg->hdr = CPPCX2C(_msg->hdr);
-	msg->iface = AJ_CharsToString(_msg->iface);
-	msg->sender = AJ_CharsToString(_msg->sender);
-	msg->destination = AJ_CharsToString(_msg->destination);
-	msg->signature = AJ_CharsToString(_msg->signature);
-	STRUCT_COPY(msg, sessionId);
-	STRUCT_COPY(msg, timestamp);
-	STRUCT_COPY(msg, ttl);
-	STRUCT_COPY(msg, sigOffset);
-	STRUCT_COPY(msg, varOffset);
-	STRUCT_COPY(msg, bodyBytes);
-	msg->bus = ref new AJ_BusAttachment();
-	msg->bus->_bus = _msg->bus;
-	msg->outer = CPPCX2C(_msg->outer);
-
-	return msg;
+	return AJ_CharsToString(arg->_arg->val.v_string);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
