@@ -81,7 +81,51 @@ namespace AllJoynWinRTComponent
 		* REMINDER: Update AJ_StatusText in aj_debug.c if adding a new status code.
 		*/
 		AJ_STATUS_LAST = 41  /**< The last error status code */
+	};
 
+	public enum class AJ_Introspect
+	{
+		/**
+		* Enmeration type for characterizing interface members
+		*/
+		AJ_Obj_Flag_Secure = 0x01,					/**< Invalid member */
+		AJ_Obj_Flag_Hidden = 0x02,					/**< If set this bit indicates this is object is not announced */
+		AJ_Obj_Flag_Disabled = 0x04,				/**< If set this bit indicates that method calls cannot be made to the object at this time */
+		AJ_Obj_Flag_Announced = 0x08,				/**< If set this bit indicates this object is announced by ABOUT */
+		AJ_Obj_Flag_Is_Proxy = 0x10,				/**< If set this bit indicates this object is a proxy object */
+		AJ_Obj_Flag_Described = 0x20,				/**< If set this bit indicates this object has descriptions and is announced by ABOUT with 'org.allseen.Introspectable' interface added to the announcement */
+
+		AJ_Obj_Flags_All_Include_Mask = 0xFF,		/**< The include filter mask for the object iterator indicating ALL objects */
+
+		/*
+		* When a message unmarshalled the message is validated by matching it against a list of object
+		* tables that fully describe the message. If the message matches the unmarshal code sets the msgId
+		* field in the AJ_Message struct. Rather than using a series of string comparisons, application code
+		* can simply use this msgId to identify the message. There are three predefined object tables and
+		* applications and services are free to add additional tables. The maximum number of table is 127
+		* because the most signifant bit in the msgId is reserved to distinguish between method calls and
+		* their corresponding replies.
+		*
+		* Of the three predefined tables the first is reserved for bus management messages. The second is
+		* for objects implemented by the application. The third is for proxy (remote) objects the
+		* application interacts with.
+		*
+		* The same message identifiers are also used by the marshalling code to populate the message header
+		* with the appropriate strings for the object path, interface name, member, and signature. This
+		* relieves the application developer from having to explicitly set these values in the message.
+		*/
+		AJ_Bus_ID_Flag = 0x00,						/**< Identifies that a message belongs to the set of builtin bus object messages */
+		AJ_App_ID_Flag = 0x01,						/**< Identifies that a message belongs to the set of objects implemented by the application */
+		AJ_Prx_ID_Flag = 0x02,						/**< Identifies that a message belongs to the set of objects implemented by remote peers */
+	
+		/*
+		* This flag AJ_REP_ID_FLAG is set in the msgId filed to indentify that a message is a reply to a
+		* method call. Because the object description describes the out (call) and in (reply) arguments the
+		* same entry in the object table is used for both method calls and replies but since they are
+		* handled differently this flags is set by the unmarshaller to indicate whether the specific
+		* message is the call or reply.
+		*/
+		AJ_Rep_ID_Flag = 0x80,						/**< Indicates a message is a reply message */	
 	};
 
 	/**
@@ -158,8 +202,51 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_DeliverMsg(AJ_Message^ msg);
 		static AJ_Status AJ_CloseMsg(AJ_Message^ msg);
 		static AJ_Status AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout);
-		static AJ_Status AJ_UnmarshalArg(AJ_Message^ bus, AJ_Arg^ msg);
+		static AJ_Status AJ_UnmarshalArg(AJ_Message^ msg, AJ_Arg^ arg);
 		static AJ_Status AJ_CloseArg(AJ_Arg^ arg);
+		static AJ_Status AJ_BusHandleBusMessage(AJ_Message^ msg);
+		static AJ_Status AJ_BusFindAdvertisedName(AJ_BusAttachment^ bus, String^ namePrefix, uint8_t op);
+		static AJ_Status AJ_FindBusAndConnect(AJ_BusAttachment^ bus, String^ serviceName, uint32_t timeout);
+		static AJ_Status AJ_BusSetSignalRule(AJ_BusAttachment^ bus, String^ ruleString, uint8_t rule);
+		static void AJ_Disconnect(AJ_BusAttachment^ bus);
+		static AJ_Status AJ_BusJoinSession(AJ_BusAttachment^ bus, String^ sessionHost, uint16_t port, AJ_SessionOpts^ opts);
+
+		/////////////////////////////////////////////////////////////////////////
+		// Support functions for introspection
+		/////////////////////////////////////////////////////////////////////////
+
+		/*
+		* AJ_DESCRIPTION_ID(BusObject base ID, Interface index, Member index, Arg index)
+		* Interface, Member, and Arg indexes starts at 1 and represent the readible index in a list.
+		* [ a, b, ... ] a would be index 1, b 2, etc.
+		*/
+		static uint32_t AJ_Description_ID(uint32_t o, uint32_t i, uint32_t m, uint32_t a);
+
+		/*
+		* Functions to encode a message or property id from object table index, object path, interface, and member indices.
+		*/
+		static uint32_t AJ_Encode_Message_ID(uint32_t o, uint32_t p, uint32_t i, uint32_t m);		/**< Encode a message id */
+		static uint32_t AJ_Encode_Property_ID(uint32_t o, uint32_t p, uint32_t i, uint32_t m);		/**< Encode a property id */
+
+		/*
+		* Functions for encoding the standard bus and applications messages
+		*/
+		static uint32_t AJ_Bus_Message_ID(uint32_t p, uint32_t i, uint32_t m);						/**< Encode a message id from bus object */
+		static uint32_t AJ_App_Message_ID(uint32_t p, uint32_t i, uint32_t m);						/**< Encode a message id from application object */
+		static uint32_t AJ_Prx_Message_ID(uint32_t p, uint32_t i, uint32_t m);						/**< Encode a message id from proxy object */
+
+		/*
+		* Functions for encoding the standard bus and application properties
+		*/
+		static uint32_t AJ_Bus_Property_ID(uint32_t p, uint32_t i, uint32_t m);						/**< Encode a property id from bus object */
+		static uint32_t AJ_App_Property_ID(uint32_t p, uint32_t i, uint32_t m);						/**< Encode a property id from application object */
+		static uint32_t AJ_Prx_Property_ID(uint32_t p, uint32_t i, uint32_t m);						/**< Encode a property id from proxy object */
+
+		/**
+		* Function to generate the reply message identifier from method call message. This is the message
+		* identifier in the reply context.
+		*/
+		static uint32_t AJ_Reply_ID(uint32_t id);
 
 		// Helper functions
 		static uint32_t Get_AJ_Message_msgId(AJ_Message^ msg);

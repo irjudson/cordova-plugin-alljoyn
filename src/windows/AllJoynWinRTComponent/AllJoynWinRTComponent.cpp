@@ -1,12 +1,12 @@
 ﻿#include "pch.h"
 
-#include "AllJoynWinRTComponent.h"
-
 #include "aj_init.h"
 #include "aj_util.h"
 #include "aj_target_util.h"
 #include "aj_helper.h"
 #include "aj_msg.h"
+#include "aj_connect.h"
+#include "AllJoynWinRTComponent.h"
 
 #include <ppltasks.h>
 
@@ -58,6 +58,7 @@ static ::AJ_Object* _s_cachedLocalObjects = NULL;
 static ::AJ_Object* _s_cachedProxyObjects = NULL;
 static const Array<AllJoynWinRTComponent::AJ_Object^>^ s_cachedLocalObjects;
 static const Array<AllJoynWinRTComponent::AJ_Object^>^ s_cachedProxyObjects;
+static ::AJ_SessionOpts* _s_cachedSessionOpts = NULL;
 
 
 AllJoynWinRTComponent::AllJoyn::AllJoyn()
@@ -230,14 +231,18 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 	AllJoynWinRTComponent::AJ_SessionOpts^ opts)
 {
 	::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
+	::AJ_SessionOpts* _opts = NULL;
 
 	WCS2MBS(daemonName);
 	WCS2MBS(name);
 
-	::AJ_SessionOpts* _opts = NULL;
-
 	if (opts)
 	{
+		if (_s_cachedSessionOpts)
+		{
+			SAFE_DEL(_s_cachedSessionOpts);
+		}
+
 		_opts = new ::AJ_SessionOpts();
 		ZeroMemory(_opts, sizeof(_opts));
 
@@ -245,6 +250,8 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 		STRUCT_COPY(opts, proximity);
 		STRUCT_COPY(opts, traffic);
 		STRUCT_COPY(opts, transports);
+
+		_s_cachedSessionOpts = _opts;
 	}
 
 	::AJ_Status _status = ::AJ_StartClient(_bus, _daemonName, timeout, connected, _name, port, sessionId, _opts);
@@ -346,6 +353,77 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseArg(AJ_
 	return AJ_Status::AJ_OK;
 }
 
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusHandleBusMessage(AJ_Message^ msg)
+{
+	::AJ_Status _status = ::AJ_BusHandleBusMessage(msg->_msg);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusFindAdvertisedName(AJ_BusAttachment^ bus, String^ namePrefix, uint8_t op)
+{
+	WCS2MBS(namePrefix);
+	::AJ_Status _status = ::AJ_BusFindAdvertisedName(bus->_bus, _namePrefix, op);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_FindBusAndConnect(AJ_BusAttachment^ bus, String^ serviceName, uint32_t timeout)
+{
+	WCS2MBS(serviceName);
+	::AJ_Status _status = ::AJ_FindBusAndConnect(bus->_bus, _serviceName, timeout);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusSetSignalRule(AJ_BusAttachment^ bus, String^ ruleString, uint8_t rule)
+{
+	WCS2MBS(ruleString);
+	::AJ_Status _status = ::AJ_BusSetSignalRule(bus->_bus, _ruleString, rule);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+void AllJoynWinRTComponent::AllJoyn::AJ_Disconnect(AJ_BusAttachment^ bus)
+{
+	::AJ_Disconnect(bus->_bus);
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusJoinSession(AJ_BusAttachment^ bus, String^ sessionHost, uint16_t port, AJ_SessionOpts^ opts)
+{
+	WCS2MBS(sessionHost);
+	::AJ_SessionOpts* _opts = NULL;
+
+	if (opts)
+	{
+		if (_s_cachedSessionOpts)
+		{
+			SAFE_DEL(_s_cachedSessionOpts);
+		}
+
+		_opts = new ::AJ_SessionOpts();
+		ZeroMemory(_opts, sizeof(_opts));
+
+		STRUCT_COPY(opts, isMultipoint);
+		STRUCT_COPY(opts, proximity);
+		STRUCT_COPY(opts, traffic);
+		STRUCT_COPY(opts, transports);
+
+		_s_cachedSessionOpts = _opts;
+	}
+
+	::AJ_Status _status = ::AJ_BusJoinSession(bus->_bus, _sessionHost, port, _opts);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Helper functions
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -359,6 +437,66 @@ uint32_t AllJoynWinRTComponent::AllJoyn::Get_AJ_Message_msgId(AJ_Message^ msg)
 String^ AllJoynWinRTComponent::AllJoyn::Get_AJ_Arg_v_string(AJ_Arg^ arg)
 {
 	return AJ_CharsToString(arg->_arg->val.v_string);
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Description_ID(uint32_t o, uint32_t i, uint32_t m, uint32_t a)
+{
+	return (((uint32_t)(o) << 24) | (((uint32_t)(i)) << 16) | (((uint32_t)(m)) << 8) | (a));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Encode_Message_ID(uint32_t o, uint32_t p, uint32_t i, uint32_t m)
+{
+	return (((uint32_t)(o) << 24) | (((uint32_t)(p)) << 16) | (((uint32_t)(i)) << 8) | (m));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Encode_Property_ID(uint32_t o, uint32_t p, uint32_t i, uint32_t m)
+{
+	return (((uint32_t)(o) << 24) | (((uint32_t)(p)) << 16) | (((uint32_t)(i)) << 8) | (m));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Bus_Message_ID(uint32_t p, uint32_t i, uint32_t m)
+{
+	return (((uint32_t)(AllJoynWinRTComponent::AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(p)) << 16) | (((uint32_t)(i)) << 8) | (m));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_App_Message_ID(uint32_t p, uint32_t i, uint32_t m)
+{
+	return (((uint32_t)(AllJoynWinRTComponent::AJ_Introspect::AJ_App_ID_Flag) << 24) | (((uint32_t)(p)) << 16) | (((uint32_t)(i)) << 8) | (m));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Prx_Message_ID(uint32_t p, uint32_t i, uint32_t m)
+{
+	return (((uint32_t)(AllJoynWinRTComponent::AJ_Introspect::AJ_Prx_ID_Flag) << 24) | (((uint32_t)(p)) << 16) | (((uint32_t)(i)) << 8) | (m));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Bus_Property_ID(uint32_t p, uint32_t i, uint32_t m)
+{
+	return (((uint32_t)(AllJoynWinRTComponent::AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(p)) << 16) | (((uint32_t)(i)) << 8) | (m));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_App_Property_ID(uint32_t p, uint32_t i, uint32_t m)
+{
+	return (((uint32_t)(AllJoynWinRTComponent::AJ_Introspect::AJ_App_ID_Flag) << 24) | (((uint32_t)(p)) << 16) | (((uint32_t)(i)) << 8) | (m));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Prx_Property_ID(uint32_t p, uint32_t i, uint32_t m)
+{
+	return (((uint32_t)(AllJoynWinRTComponent::AJ_Introspect::AJ_Prx_ID_Flag) << 24) | (((uint32_t)(p)) << 16) | (((uint32_t)(i)) << 8) | (m));
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Reply_ID(uint32_t id)
+{
+	return ((id) | (uint32_t)((uint32_t)(AllJoynWinRTComponent::AJ_Introspect::AJ_Rep_ID_Flag) << 24));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
