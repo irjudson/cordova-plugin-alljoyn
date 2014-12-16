@@ -426,6 +426,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusJoinSessi
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalSignal(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t ttl)
 {
+	msg->_msg = new ::AJ_Message();
 	WCS2MBS(destination);
 	::AJ_Status _status = ::AJ_MarshalSignal(bus->_bus, msg->_msg, msgId, _destination, sessionId, flags, ttl);
 
