@@ -219,7 +219,7 @@ void AllJoynWinRTComponent::AllJoyn::AJ_RegisterObjects(const Array<AJ_Object^>^
 }
 
 
-AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
+IAsyncOperation<AllJoynWinRTComponent::AJ_Session>^ AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 (
 	AllJoynWinRTComponent::AJ_BusAttachment^ bus,
 	String^ daemonName,
@@ -227,42 +227,39 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 	uint8_t connected,
 	String^ name,
 	uint16_t port,
-	uint32_t* sessionId,
 	AllJoynWinRTComponent::AJ_SessionOpts^ opts)
 {
-	if (bus->_bus)
+	return create_async([bus, daemonName, timeout, connected, name, port, opts]() -> AllJoynWinRTComponent::AJ_Session
 	{
-		SAFE_DEL(bus->_bus);
-	}
+		::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
+		::AJ_SessionOpts* _opts = NULL;
 
-	::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
-	::AJ_SessionOpts* _opts = NULL;
+		WCS2MBS(daemonName);
+		WCS2MBS(name);
 
-	WCS2MBS(daemonName);
-	WCS2MBS(name);
-
-	if (opts)
-	{
-		if (_s_cachedSessionOpts)
+		if (opts)
 		{
 			SAFE_DEL(_s_cachedSessionOpts);
+			_opts = new ::AJ_SessionOpts();
+			ZeroMemory(_opts, sizeof(_opts));
+
+			STRUCT_COPY(opts, isMultipoint);
+			STRUCT_COPY(opts, proximity);
+			STRUCT_COPY(opts, traffic);
+			STRUCT_COPY(opts, transports);
+
+			_s_cachedSessionOpts = _opts;
 		}
 
-		_opts = new ::AJ_SessionOpts();
-		ZeroMemory(_opts, sizeof(_opts));
+		uint32_t _sessionId;
+		::AJ_Status _status = ::AJ_StartClient(_bus, _daemonName, timeout, connected, _name, port, &_sessionId, _opts);
+		bus->_bus = _bus;
+		AJ_Session retObj;
+		retObj.sessionId = _sessionId;
+		retObj.status = static_cast<uint8_t>(_status);
 
-		STRUCT_COPY(opts, isMultipoint);
-		STRUCT_COPY(opts, proximity);
-		STRUCT_COPY(opts, traffic);
-		STRUCT_COPY(opts, transports);
-
-		_s_cachedSessionOpts = _opts;
-	}
-
-	::AJ_Status _status = ::AJ_StartClient(_bus, _daemonName, timeout, connected, _name, port, sessionId, _opts);
-	bus->_bus = _bus;
-
-	return (static_cast<AJ_Status>(_status));
+		return retObj;
+	});
 }
 
 
@@ -329,12 +326,8 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseMsg(AJ_
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout)
 {
-	if (!msg->_msg)
-	{
-		SAFE_DEL(msg->_msg);
-		msg->_msg = new ::AJ_Message();
-	}
-
+	SAFE_DEL(msg->_msg);
+	msg->_msg = new ::AJ_Message();
 	::AJ_Status _status = ::AJ_UnmarshalMsg(bus->_bus, msg->_msg, timeout);
 
 	return (static_cast<AJ_Status>(_status));
@@ -343,12 +336,8 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalMsg
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArg(AJ_Message^ msg, AJ_Arg^ arg)
 {
-	if (!arg->_arg)
-	{
-		SAFE_DEL(arg->_arg);
-		arg->_arg = new ::AJ_Arg();
-	}
-
+	SAFE_DEL(arg->_arg);
+	arg->_arg = new ::AJ_Arg();
 	::AJ_Status _status = ::AJ_UnmarshalArg(msg->_msg, arg->_arg);
 
 	return (static_cast<AJ_Status>(_status));
@@ -382,11 +371,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusFindAdver
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_FindBusAndConnect(AJ_BusAttachment^ bus, String^ serviceName, uint32_t timeout)
 {
-	if (bus->_bus)
-	{
-		SAFE_DEL(bus->_bus);
-	}
-
+	SAFE_DEL(bus->_bus);
 	::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
 	WCS2MBS(serviceName);
 	::AJ_Status _status = ::AJ_FindBusAndConnect(_bus, _serviceName, timeout);
@@ -418,11 +403,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusJoinSessi
 
 	if (opts)
 	{
-		if (_s_cachedSessionOpts)
-		{
-			SAFE_DEL(_s_cachedSessionOpts);
-		}
-
+		SAFE_DEL(_s_cachedSessionOpts);
 		_opts = new ::AJ_SessionOpts();
 		ZeroMemory(_opts, sizeof(_opts));
 

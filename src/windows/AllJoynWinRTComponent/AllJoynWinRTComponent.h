@@ -177,6 +177,15 @@ namespace AllJoynWinRTComponent
 	};
 
 	/**
+	* Type for AJ_StartClient() return
+	*/
+	public value struct AJ_Session
+	{
+		uint8_t status;
+		uint32_t sessionId;
+	};
+
+	/**
 	* AllJoyn Windows Runtime
 	*/
     public ref class AllJoyn sealed
@@ -188,14 +197,13 @@ namespace AllJoynWinRTComponent
 		static void AJ_Initialize();
 		static void AJ_PrintXML(const Array<AJ_Object^>^ localObjects);
 		static void AJ_RegisterObjects(const Array<AJ_Object^>^ localObjects, const Array<AJ_Object^>^ proxyObjects);
-		static AJ_Status AJ_StartClient(AJ_BusAttachment^ bus,
-										String^ daemonName,
-										uint32_t timeout,
-										uint8_t connected,
-										String^ name,
-										uint16_t port,
-										uint32_t* sessionId,
-										AJ_SessionOpts^ opts);
+		static IAsyncOperation<AJ_Session>^ AJ_StartClient(AJ_BusAttachment^ bus,
+														   String^ daemonName,
+														   uint32_t timeout,
+														   uint8_t connected,
+														   String^ name,
+														   uint16_t port,
+														   AJ_SessionOpts^ opts);
 		static void AJ_ReleaseObjects();
 		static AJ_Status AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout);
 		static AJ_Status AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args);
