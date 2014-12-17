@@ -324,13 +324,16 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseMsg(AJ_
 }
 
 
-AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout)
+IAsyncOperation<AllJoynWinRTComponent::AJ_Status>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout)
 {
-	SAFE_DEL(msg->_msg);
-	msg->_msg = new ::AJ_Message();
-	::AJ_Status _status = ::AJ_UnmarshalMsg(bus->_bus, msg->_msg, timeout);
+	return create_async([bus, msg, timeout]() -> AllJoynWinRTComponent::AJ_Status
+	{
+		SAFE_DEL(msg->_msg);
+		msg->_msg = new ::AJ_Message();
+		::AJ_Status _status = ::AJ_UnmarshalMsg(bus->_bus, msg->_msg, timeout);
 
-	return (static_cast<AJ_Status>(_status));
+		return (static_cast<AJ_Status>(_status));
+	});
 }
 
 

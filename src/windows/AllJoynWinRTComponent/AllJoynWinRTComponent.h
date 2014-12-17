@@ -209,7 +209,7 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args);
 		static AJ_Status AJ_DeliverMsg(AJ_Message^ msg);
 		static AJ_Status AJ_CloseMsg(AJ_Message^ msg);
-		static AJ_Status AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout);
+		static IAsyncOperation<AJ_Status>^ AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout);
 		static AJ_Status AJ_UnmarshalArg(AJ_Message^ msg, AJ_Arg^ arg);
 		static AJ_Status AJ_CloseArg(AJ_Arg^ arg);
 		static AJ_Status AJ_BusHandleBusMessage(AJ_Message^ msg);
