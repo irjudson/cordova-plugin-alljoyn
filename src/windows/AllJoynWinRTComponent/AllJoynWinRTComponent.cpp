@@ -230,6 +230,11 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_StartClient
 	uint32_t* sessionId,
 	AllJoynWinRTComponent::AJ_SessionOpts^ opts)
 {
+	if (bus->_bus)
+	{
+		SAFE_DEL(bus->_bus);
+	}
+
 	::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
 	::AJ_SessionOpts* _opts = NULL;
 
@@ -377,6 +382,11 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusFindAdver
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_FindBusAndConnect(AJ_BusAttachment^ bus, String^ serviceName, uint32_t timeout)
 {
+	if (bus->_bus)
+	{
+		SAFE_DEL(bus->_bus);
+	}
+
 	::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
 	WCS2MBS(serviceName);
 	::AJ_Status _status = ::AJ_FindBusAndConnect(_bus, _serviceName, timeout);
