@@ -377,8 +377,10 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusFindAdver
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_FindBusAndConnect(AJ_BusAttachment^ bus, String^ serviceName, uint32_t timeout)
 {
+	::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
 	WCS2MBS(serviceName);
-	::AJ_Status _status = ::AJ_FindBusAndConnect(bus->_bus, _serviceName, timeout);
+	::AJ_Status _status = ::AJ_FindBusAndConnect(_bus, _serviceName, timeout);
+	bus->_bus = _bus;
 
 	return (static_cast<AJ_Status>(_status));
 }
