@@ -7,6 +7,7 @@
 using namespace Platform;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
+using namespace Platform::Collections;
 
 
 #ifdef AJ_PrintXML
@@ -219,6 +220,7 @@ namespace AllJoynWinRTComponent
 		static void AJ_Disconnect(AJ_BusAttachment^ bus);
 		static AJ_Status AJ_BusJoinSession(AJ_BusAttachment^ bus, String^ sessionHost, uint16_t port, AJ_SessionOpts^ opts);
 		static AJ_Status AJ_MarshalSignal(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t ttl);
+		static Array<Object^>^ AJ_UnmarshalArgs(AJ_Message^ msg, String^ signature);
 
 		/////////////////////////////////////////////////////////////////////////
 		// Support functions for introspection

@@ -489,6 +489,72 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalSigna
 }
 
 
+Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg, String^ signature)
+{
+	if (signature->Length() == 0)
+	{
+		return nullptr;
+	}
+
+	Array<Object^>^ args = ref new Array<Object^>(signature->Length() + 1);
+	::AJ_Status _status = ::AJ_Status::AJ_ERR_INVALID;
+
+	WCS2MBS(signature);
+
+	for (int i = 0; i < signature->Length(); i++)
+	{
+		::AJ_Arg arg;
+		uint8_t typeId = (uint8_t)_signature[i];
+		_status = ::AJ_UnmarshalArg(msg->_msg, &arg);
+		args[i + 1] = nullptr;
+
+		if (_status != AJ_OK)
+		{
+			break;
+		}
+
+		switch (_signature[i])
+		{
+			/**< AllJoyn 64-bit unsigned integer basic type */
+		case 't':
+			args[i + 1] = static_cast<uint64_t>(*arg.val.v_uint64);
+			break;
+
+			/**< AllJoyn 32-bit unsigned integer basic type */
+		case 'u':
+			args[i + 1] = static_cast<uint32_t>(*arg.val.v_uint32);
+			break;
+
+			/**< AllJoyn 16-bit unsigned integer basic type */
+		case 'q':
+			args[i + 1] = static_cast<uint16_t>(*arg.val.v_uint16);
+			break;
+
+			/**< AllJoyn 8-bit unsigned integer basic type */
+		case 'y':
+			args[i + 1] = static_cast<uint8_t>(*arg.val.v_byte);
+			break;
+
+			/**< AllJoyn UTF-8 NULL terminated string basic type */
+		case 's':
+			String^ val = AJ_CharsToString(arg.val.v_string);
+			args[i + 1] = val;
+			break;
+		}
+
+		if (args[i + 1] == nullptr)
+		{
+			_status = ::AJ_Status::AJ_ERR_INVALID;
+			break;
+		}
+	}
+
+	args[0] = static_cast<AJ_Status>(_status);
+
+	return args;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Helper functions
 //////////////////////////////////////////////////////////////////////////////////////////
