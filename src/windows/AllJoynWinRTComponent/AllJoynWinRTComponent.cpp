@@ -475,6 +475,14 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusJoinSessi
 }
 
 
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusLeaveSession(AJ_BusAttachment^ bus, uint32_t sessionId)
+{
+	::AJ_Status _status = ::AJ_BusLeaveSession(bus->_bus, sessionId);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalSignal(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t ttl)
 {
 	if (!msg->_msg)
