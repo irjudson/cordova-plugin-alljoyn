@@ -7,7 +7,7 @@
 #include "aj_msg.h"
 #include "aj_connect.h"
 #include "AllJoynWinRTComponent.h"
-
+#include "aj_debug.h"
 #include <ppltasks.h>
 
 using namespace concurrency;
@@ -279,28 +279,79 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMetho
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args)
 {
-	::AJ_Status _status;
+	::AJ_Status _status = ::AJ_Status::AJ_ERR_INVALID;
 
 	WCS2MBS(signature);
 
-	// Phong TODO: replace va_list
-	char parameter1[MAX_STR_LENGTH];
-	char parameter2[MAX_STR_LENGTH];
+	for (int i = 0; i < args->Length; i++)
+	{
+		::AJ_Arg arg;
+		uint8_t u8;
+		uint16_t u16;
+		uint32_t u32;
+		uint64_t u64;
+		void* val = NULL;
+		uint8_t typeId = (uint8_t)_signature[i];
 
-	if (args->Length == 0)
-	{
-		_status = ::AJ_MarshalArgs(msg->_msg, _signature);
-	}
-	else if (args->Length == 1)
-	{
-		AJ_StringToChars(args[0], parameter1);
-		_status = ::AJ_MarshalArgs(msg->_msg, _signature, parameter1);
-	}
-	else if (args->Length == 2)
-	{
-		AJ_StringToChars(args[0], parameter1);
-		AJ_StringToChars(args[1], parameter2);
-		_status = ::AJ_MarshalArgs(msg->_msg, _signature, parameter1, parameter2);
+		switch (_signature[i])
+		{
+			/**< AllJoyn 64-bit unsigned integer basic type */
+			case 't':
+				u64 = _wtoi64(args[i]->Data());
+				val = &u64;
+				break;
+
+			/**< AllJoyn 32-bit unsigned integer basic type */
+			case 'u':
+				u32 = _wtoi(args[i]->Data());
+				val = &u32;
+				break;
+
+			/**< AllJoyn 16-bit unsigned integer basic type */
+			case 'q':
+				u16 = _wtoi(args[i]->Data());
+				val = &u16;
+				break;
+
+			/**< AllJoyn 8-bit unsigned integer basic type */
+			case 'y':
+				u8 = _wtoi(args[i]->Data());
+				val = &u8;
+				break;
+
+			/**< AllJoyn UTF-8 NULL terminated string basic type */
+			case 's':
+				char str[MAX_STR_LENGTH];
+				wcstombs(str, args[i]->Data(), MAX_STR_LENGTH);
+				val = &str;
+				break;
+
+			default:
+				// Unsupported type
+				break;
+		}
+
+		if (val)
+		{
+			arg.typeId = typeId;
+			arg.flags = 0;
+			arg.len = 0;
+			arg.val.v_data = (void*)val;
+			arg.sigPtr = NULL;
+			arg.container = NULL;
+			_status = ::AJ_MarshalArg(msg->_msg, &arg);
+
+			if (_status != AJ_OK)
+			{
+				AJ_ErrPrintf(("AJ_MarshalArgs(): status=%s\n", AJ_StatusText(_status)));
+				break;
+			}
+		}
+		else
+		{
+			_status = ::AJ_Status::AJ_ERR_INVALID;
+			break;
+		}
 	}
 
 	return (static_cast<AJ_Status>(_status));
