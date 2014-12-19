@@ -130,6 +130,205 @@ namespace AllJoynWinRTComponent
 	};
 
 	/**
+	* Identifiers for standard methods and signals. These are the values returned by
+	* AJ_IdentifyMessage() for correctly formed method and signal messages.
+	*/
+	public enum class AJ_Std
+	{
+		/*
+		* Members of the /org/freedesktop/DBus interface org.freedesktop.DBus
+		*/
+
+		/**< method for hello */
+		AJ_Method_Hello = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(0)) << 8) | (0)),
+
+		/**< signal for name owner changed */
+		AJ_Signal_Name_Owner_Changed = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(1)) << 8) | (1)),
+
+		/**< signal for name acquired */
+		AJ_Signal_Name_Acquired = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(0)) << 8) | (2)),
+
+		/**< signal for name lost */
+		AJ_Signal_Name_Lost = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(0)) << 8) | (3)),
+
+		/**< signal for props changed */
+		AJ_Signal_Props_Changed = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(0)) << 8) | (4)),
+
+		/**< method for request name */
+		AJ_Method_Request_Name = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(0)) << 8) | (5)),
+
+		/**< method for add match */
+		AJ_Method_Add_Match = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(0)) << 8) | (6)),
+
+		/**< method for remove match */
+		AJ_Method_Remove_Match = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(0)) << 8) | (7)),
+
+		/**< method for release name */
+		AJ_Method_Release_Name = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(0)) << 16) | (((uint32_t)(0)) << 8) | (8)),
+	
+		/*
+		* Members of /org/alljoyn/Bus interface org.alljoyn.Bus
+		*/
+	
+		/**< signal for session lost */
+		AJ_Signal_Session_Lost = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (0)),
+		
+		/**< signal for found advertising name */
+		AJ_Signal_Found_Adv_Name = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (1)),
+		
+		/**< signal for lost advertising name */
+		AJ_Signal_Lost_Adv_Name = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (2)),
+		
+		/**< signal for mp session changed */
+		AJ_Signal_Mp_Session_Changed = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (3)),
+		
+		/**< method for advertise name */
+		AJ_Method_Advertise_Name = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (4)),
+		
+		/**< method for cancel advertise */
+		AJ_Method_Cancel_Advertise = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (5)),
+		
+		/**< method for find name */
+		AJ_Method_Find_Name = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (6)),
+		
+		/**< method for cancel find name */
+		AJ_Method_Cancel_Find_Name = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (7)),
+		
+		/**< method for bind session port */
+		AJ_Method_Bind_Session_Port = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (8)),
+		
+		/**< method for unbind session */
+		AJ_Method_Unbind_Session = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (9)),
+		
+		/**< method for join session */
+		AJ_Method_Join_Session = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (10)),
+		
+		/**< method for leave session */
+		AJ_Method_Leave_Session = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (11)),
+		
+		/**< method for cancel sessionless */
+		AJ_Method_Cancel_Sessionless = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (12)),
+		
+		/**< method for find name by specific transports */
+		AJ_Method_Find_Name_By_Transport = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (13)),
+		
+		/**< method for cancel find name by specific transports */
+		AJ_Method_Cancel_Find_Name_By_Transport = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (14)),
+		
+		/**< method for setting the link timeout for a session */
+		AJ_Method_Set_Link_Timeout = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (15)),
+		
+		/**< method for removing a member in a session */
+		AJ_Method_Remove_Session_Member = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (16)),
+		
+		/**< signal for session lost with a reason */
+		AJ_Signal_Session_Lost_With_Reason = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (17)),
+		
+		/**< method for ping */
+		AJ_Method_Bus_Ping = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(1)) << 16) | (((uint32_t)(0)) << 8) | (18)),
+	
+		/*
+		* Members of /org/alljoyn/Bus/Peer interface org.alljoyn.Bus.Peer.Session
+		*/
+
+		/**< method for accept session */
+		AJ_Method_Accept_Session = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(0)) << 8) | (0)),
+		
+		/**< signal for session joined */
+		AJ_Signal_Session_Joined = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(0)) << 8) | (1)),
+
+		/*
+		* Members of /org/alljoyn/Bus/Peer interface org.alljoyn.Bus.Peer.Authentication
+		*/
+
+		/**< method for exchange guids */
+		AJ_Method_Exchange_Guids = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(1)) << 8) | (0)),
+
+		/**< method for generate session key */
+		AJ_Method_GEN_Session_Key = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(1)) << 8) | (1)),
+
+		/**< method for exchange group keys */
+		AJ_Method_Exchange_Group_Keys = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(1)) << 8) | (2)),
+
+		/**< method for auth challenge */
+		AJ_Method_Auth_Challenge = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(1)) << 8) | (3)),
+
+		/**< method for exchange suites*/
+		AJ_Method_Exchange_Suites = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(1)) << 8) | (4)),
+
+		/**< method for key exchange*/
+		AJ_Method_Key_Exchange = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(1)) << 8) | (5)),
+
+		/**< method for authenticating key exchange*/
+		AJ_Method_Key_Authentication = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(2)) << 16) | (((uint32_t)(1)) << 8) | (6)),
+
+		/*
+		* Members of interface org.freedesktop.DBus.Introspectable
+		*
+		* Note - If you use this message id explicitly to construct a method call it will always introspect
+		* the root object.
+		*/
+
+		/**< method for introspect */
+		AJ_Method_Introspect = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(3)) << 16) | (((uint32_t)(0)) << 8) | (0)),
+
+		/*
+		* Members of the interface org.freedesktop.DBus.Peer
+		*/
+
+		/**< method for ping */
+		AJ_Method_Ping = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(3)) << 16) | (((uint32_t)(1)) << 8) | (0)),
+		
+		/**< method for get machine id */
+		AJ_Method_Get_Machine_Id = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(3)) << 16) | (((uint32_t)(1)) << 8) | (1)),
+
+		/*
+		* Members of the interface org.allseen.Introspectable
+		*/
+
+		/**< method for get description langauges */
+		AJ_Method_Get_Description_Lang = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(3)) << 16) | (((uint32_t)(2)) << 8) | (0)),
+
+		/**< method for introspect with descriptions */
+		AJ_Method_Introspect_With_Desc = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(3)) << 16) | (((uint32_t)(2)) << 8) | (1)),
+
+		/*
+		* Members of /org/alljoyn/Daemon interface org.alljoyn.Daemon
+		*/
+
+		/**< signal for link probe request */
+		AJ_Signal_Probe_Req = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(4)) << 16) | (((uint32_t)(0)) << 8) | (0)),
+
+		/**< signal for link probe acknowledgement */
+		AJ_Signal_Probe_Ack = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(4)) << 16) | (((uint32_t)(0)) << 8) | (1)),
+
+		/*
+		* Members of interface org.alljoyn.About
+		*/
+
+		AJ_Method_About_Get_Prop = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(5)) << 16) | (((uint32_t)(0)) << 8) | (0)),
+		AJ_Method_About_Set_Prop = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(5)) << 16) | (((uint32_t)(0)) << 8) | (1)),
+		AJ_Property_About_Version = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(5)) << 16) | (((uint32_t)(1)) << 8) | (0)),
+		AJ_Method_About_Get_About_Data = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(5)) << 16) | (((uint32_t)(1)) << 8) | (1)),
+		AJ_Method_About_Get_Object_Description = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(5)) << 16) | (((uint32_t)(1)) << 8) | (2)),
+		AJ_Signal_About_Announce = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(5)) << 16) | (((uint32_t)(1)) << 8) | (3)),
+
+		/*
+		* Members of interface org.alljoyn.AboutIcon
+		*/
+
+		AJ_Method_About_Icon_Get_Prop = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(0)) << 8) | (0)),
+		AJ_Method_About_Icon_Set_Prop = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(0)) << 8) | (1)),
+
+		AJ_Property_About_Icon_Version_Prop = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(1)) << 8) | (0)),
+		AJ_Property_About_Icon_Mimetype_Prop = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(1)) << 8) | (1)),
+		AJ_Property_About_Icon_Size_Prop = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(1)) << 8) | (2)),
+
+		AJ_Method_About_Icon_Get_Url = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(1)) << 8) | (3)),
+		AJ_Method_About_Icon_Get_Content = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(1)) << 8) | (4)),
+	};
+
+	/**
 	* Type for a bus attachment
 	*/
 	public ref struct AJ_BusAttachment sealed
