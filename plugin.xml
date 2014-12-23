@@ -14,8 +14,8 @@
 	<js-module src="www/alljoyn.js" name="allJoyn">
 		<merges target="allseen.alljoyn" />
 	</js-module>
-
-  <hook type="after_plugin_add" src="scripts/afterPluginAdd.js" />
+  
+    <hook type="before_plugin_install" src="scripts/afterPluginAdd.js" />
 
 	<!-- android -->
 	<platform name="android">
@@ -120,7 +120,7 @@
 		<header-file src="src/ios/AllJoyn_Cordova.h" target-dir="." />
 		<source-file src="src/ios/AllJoyn_Cordova.m" target-dir="." />
 
-    <hook type="after_plugin_install" src="scripts/iOSAfterPluginInstall.js" />
+        <hook type="after_plugin_install" src="scripts/iOSAfterPluginInstall.js" />
 	</platform>
 
 	<!-- windows -->

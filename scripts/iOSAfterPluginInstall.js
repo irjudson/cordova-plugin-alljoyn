@@ -5,6 +5,9 @@ var path = require('path');
 var exec = require('child_process').exec;
 
 module.exports = function(context) {
+  var Q = context.requireCordovaModule('q');
+  var deferral = new Q.defer();
+
   var platformPath = path.join('platforms', 'ios');
   // The approach to get the project name has been taken from https://gist.github.com/csantanapr/9fc45c76b4d9a2d5ef85
   var xCodeProjectPath = fs.readdirSync(platformPath).filter(function(e) { return e.match(/\.xcodeproj$/i); })[0];
@@ -23,6 +26,9 @@ module.exports = function(context) {
       } else {
         console.log('Patching done.');
       }
+      deferral.resolve();
     }
   );
+
+  return deferral.promise;
 }
