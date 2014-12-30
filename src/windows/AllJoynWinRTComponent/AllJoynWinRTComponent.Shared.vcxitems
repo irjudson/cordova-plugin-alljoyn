@@ -45,10 +45,6 @@
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_bus.c">
-      <CompileAsWinRT>true</CompileAsWinRT>
-      <CompileAs>CompileAsCpp</CompileAs>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_cert.c">
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -93,10 +89,6 @@
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_keyauthentication.c">
-      <CompileAsWinRT>true</CompileAsWinRT>
-      <CompileAs>CompileAsCpp</CompileAs>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_keyexchange.c">
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -110,10 +102,6 @@
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_nvram.c">
-      <CompileAsWinRT>true</CompileAsWinRT>
-      <CompileAs>CompileAsCpp</CompileAs>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_peer.c">
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
@@ -153,6 +141,18 @@
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\target\winrt\aj_bus.c">
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>	
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\target\winrt\aj_keyauthentication.c">
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>		
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\target\winrt\aj_peer.c">
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>	
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AllJoynWinRTComponent.cpp" />

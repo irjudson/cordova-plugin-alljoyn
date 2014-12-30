@@ -421,6 +421,8 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_BusLeaveSession(AJ_BusAttachment^ bus, uint32_t sessionId);
 		static AJ_Status AJ_MarshalSignal(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t ttl);
 		static Array<Object^>^ AJ_UnmarshalArgs(AJ_Message^ msg, String^ signature);
+		static void AJ_BusSetPasswordCallback(AJ_BusAttachment^ bus, AJ_AuthPwdFunc^ pwdCallback);
+		static AJ_Status AJ_BusAuthenticatePeer(AJ_BusAttachment^ bus, String^ peerBusName, AJ_PeerAuthenticateCallback^ pwdCallback);
 
 		/////////////////////////////////////////////////////////////////////////
 		// Support functions for introspection
@@ -462,11 +464,6 @@ namespace AllJoynWinRTComponent
 		// Helper functions
 		static uint32_t Get_AJ_Message_msgId(AJ_Message^ msg);
 		static String^ Get_AJ_Arg_v_string(AJ_Arg^ arg);
-
-		// Testing
-		static IAsyncOperation<String^>^ Test();
-		static IAsyncOperation<String^>^ GetVersion();
-		static IAsyncAction^ Initialize();
 
 	private:
 		static ::AJ_Object* RegisterObjects(const Array<AJ_Object^>^);

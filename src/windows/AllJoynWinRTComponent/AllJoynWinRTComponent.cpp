@@ -265,12 +265,17 @@ IAsyncOperation<AllJoynWinRTComponent::AJ_Session>^ AllJoynWinRTComponent::AllJo
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout)
 {
-	if (!msg->_msg)
+	if (msg->_msg)
 	{
-		msg->_msg = new ::AJ_Message();
+		SAFE_DEL(msg->_msg->destination);
 	}
 
-	WCS2MBS(destination);
+	SAFE_DEL(msg->_msg);
+
+	msg->_msg = new ::AJ_Message();
+	char* _destination = new char[MAX_STR_LENGTH];
+	wcstombs(_destination, destination->Data(), MAX_STR_LENGTH);
+
 	::AJ_Status _status = ::AJ_MarshalMethodCall(bus->_bus, msg->_msg, msgId, _destination, sessionId, flags, timeout);
 
 	return (static_cast<AJ_Status>(_status));
@@ -369,6 +374,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_DeliverMsg(A
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseMsg(AJ_Message^ msg)
 {
 	::AJ_Status _status = ::AJ_CloseMsg(msg->_msg);
+	SAFE_DEL(msg->_msg->destination);
 	SAFE_DEL(msg->_msg);
 
 	return (static_cast<AJ_Status>(_status));
@@ -485,12 +491,17 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusLeaveSess
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalSignal(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t ttl)
 {
-	if (!msg->_msg)
+	if (msg->_msg)
 	{
-		msg->_msg = new ::AJ_Message();
+		SAFE_DEL(msg->_msg->destination);
 	}
 
-	WCS2MBS(destination);
+	SAFE_DEL(msg->_msg);
+
+	msg->_msg = new ::AJ_Message();
+	char* _destination = new char[MAX_STR_LENGTH];
+	wcstombs(_destination, destination->Data(), MAX_STR_LENGTH);
+
 	::AJ_Status _status = ::AJ_MarshalSignal(bus->_bus, msg->_msg, msgId, _destination, sessionId, flags, ttl);
 
 	return (static_cast<AJ_Status>(_status));
@@ -560,6 +571,22 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 	args[0] = static_cast<AJ_Status>(_status);
 
 	return args;
+}
+
+
+void AllJoynWinRTComponent::AllJoyn::AJ_BusSetPasswordCallback(AJ_BusAttachment^ bus, AJ_AuthPwdFunc^ pwdCallback)
+{
+	::AJ_BusSetPasswordCallback(bus->_bus, pwdCallback);
+}
+
+
+char _peerBusName[MAX_STR_LENGTH];
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusAuthenticatePeer(AJ_BusAttachment^ bus, String^ peerBusName, AJ_PeerAuthenticateCallback^ pwdCallback)
+{
+	wcstombs(_peerBusName, peerBusName->Data(), MAX_STR_LENGTH);
+	AJ_Status status = static_cast<AJ_Status>(::AJ_BusAuthenticatePeer(bus->_bus, _peerBusName, pwdCallback));
+	return status;
 }
 
 
@@ -636,37 +663,4 @@ uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Prx_Property_ID(uint32_t p, uint32_t
 uint32_t AllJoynWinRTComponent::AllJoyn::AJ_Reply_ID(uint32_t id)
 {
 	return ((id) | (uint32_t)((uint32_t)(AllJoynWinRTComponent::AJ_Introspect::AJ_Rep_ID_Flag) << 24));
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// Testing
-//////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef INCLUDE_C_SAMPLE_APPS
-extern int AJ_Main(void);
-#endif // INCLUDE_C_SAMPLE_APPS
-
-IAsyncOperation<String^>^ AllJoynWinRTComponent::AllJoyn::Test() {
-	return create_async([]() -> String^ 
-	{
-#ifdef INCLUDE_C_SAMPLE_APPS
-		AJ_Main();
-#endif // INCLUDE_C_SAMPLE_APPS
-
-		return "To be implemented";
-	});
-}
-
-
-IAsyncOperation<String^>^ AllJoynWinRTComponent::AllJoyn::GetVersion() {
-	return create_async([]() -> String^ {
-		return AJ_CharsToString(AJ_GetVersion());
-	});
-}
-
-
-IAsyncAction^ AllJoynWinRTComponent::AllJoyn::Initialize() {
-	return create_async([]() {
-		AJ_Initialize();
-	});
 }
