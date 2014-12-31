@@ -401,10 +401,31 @@ namespace AllJoynWinRTComponent
 	};
 
 	/**
+	* Type for a message argument helper
+	*/
+	public value struct _AJ_Arg sealed
+	{
+		uint8_t		v_byte;        /**< byte type field value in the message */
+		int16_t		v_int16;       /**< int16 type field value in the message */
+		uint16_t	v_uint16;      /**< uint16 type field value in the message */
+		uint32_t	v_bool;        /**< boolean type field value in the message */
+		uint32_t	v_uint32;      /**< uint32 type field value in the message */
+		int32_t		v_int32;       /**< int32 type field value in the message */
+		int64_t		v_int64;       /**< int64 type field value in the message */
+		uint64_t	v_uint64;      /**< uint64 type field value in the message */
+		double		v_double;      /**< double type field value in the message */
+		String^		v_string;      /**< string(char *) type field value in the message */
+		String^		v_objPath;     /**< objPath(char *) type field value in the message */
+		String^		v_signature;   /**< signature(char *) type field value in the message */
+	};
+
+	/**
 	* Type for a message argument
 	*/
 	public ref struct AJ_Arg sealed
 	{
+		property _AJ_Arg val;
+
 	internal:
 		::AJ_Arg* _arg;
 	};
@@ -493,9 +514,6 @@ namespace AllJoynWinRTComponent
 		* identifier in the reply context.
 		*/
 		static uint32_t AJ_Reply_ID(uint32_t id);
-
-		// Helper functions
-		static String^ Get_AJ_Arg_v_string(AJ_Arg^ arg);
 
 	private:
 		static ::AJ_Object* RegisterObjects(const Array<AJ_Object^>^);

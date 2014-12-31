@@ -400,6 +400,21 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArg
 	arg->_arg = new ::AJ_Arg();
 	::AJ_Status _status = ::AJ_UnmarshalArg(msg->_msg, arg->_arg);
 
+	AllJoynWinRTComponent::_AJ_Arg _val;
+	_val.v_byte = *arg->_arg->val.v_byte;
+	_val.v_int16 = *arg->_arg->val.v_int16;
+	_val.v_uint16 = *arg->_arg->val.v_uint16;
+	_val.v_bool = *arg->_arg->val.v_bool;
+	_val.v_uint32 = *arg->_arg->val.v_uint32;
+	_val.v_int32 = *arg->_arg->val.v_int32;
+	_val.v_int64 = *arg->_arg->val.v_int64;
+	_val.v_uint64 = *arg->_arg->val.v_uint64;
+	_val.v_double = *arg->_arg->val.v_double;
+	_val.v_string = AJ_CharsToString(arg->_arg->val.v_string);
+	_val.v_objPath = AJ_CharsToString(arg->_arg->val.v_objPath);
+	_val.v_signature = AJ_CharsToString(arg->_arg->val.v_signature);
+	arg->val = _val;
+
 	return (static_cast<AJ_Status>(_status));
 }
 
@@ -615,12 +630,6 @@ AllJoynWinRTComponent::_AJ_Message AllJoynWinRTComponent::AJ_Message::Get()
 	msg.ttl = _msg->ttl;
 
 	return msg;
-}
-
-
-String^ AllJoynWinRTComponent::AllJoyn::Get_AJ_Arg_v_string(AJ_Arg^ arg)
-{
-	return AJ_CharsToString(arg->_arg->val.v_string);
 }
 
 
