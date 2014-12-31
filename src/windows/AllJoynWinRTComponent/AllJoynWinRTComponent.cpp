@@ -594,9 +594,27 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusAuthentic
 // Helper functions
 //////////////////////////////////////////////////////////////////////////////////////////
 
-uint32_t AllJoynWinRTComponent::AllJoyn::Get_AJ_Message_msgId(AJ_Message^ msg)
+AllJoynWinRTComponent::_AJ_Message AllJoynWinRTComponent::AJ_Message::Get()
 {
-	return msg->_msg->msgId;
+	AllJoynWinRTComponent::_AJ_Message msg;
+
+	msg.msgId = _msg->msgId;
+	msg.hdr.endianess = _msg->hdr->endianess;
+	msg.hdr.msgType = _msg->hdr->msgType;
+	msg.hdr.flags = _msg->hdr->flags;
+	msg.hdr.majorVersion = _msg->hdr->majorVersion;
+	msg.hdr.bodyLen = _msg->hdr->bodyLen;
+	msg.hdr.serialNum = _msg->hdr->serialNum;
+	msg.hdr.headerLen = _msg->hdr->headerLen;
+	msg.iface = AJ_CharsToString(_msg->iface);
+	msg.sender = AJ_CharsToString(_msg->sender);
+	msg.destination = AJ_CharsToString(_msg->destination);
+	msg.signature = AJ_CharsToString(_msg->signature);
+	msg.sessionId = _msg->sessionId;
+	msg.timestamp = _msg->timestamp;
+	msg.ttl = _msg->ttl;
+
+	return msg;
 }
 
 

@@ -359,10 +359,43 @@ namespace AllJoynWinRTComponent
 	};
 
 	/**
+	* AllJoyn Message Header
+	*/
+	public value struct AJ_MsgHeader
+	{
+		wchar_t endianess;      /**< The endianness of this message */
+		uint8_t msgType;       /**< Indicates if the message is method call, signal, etc. */
+		uint8_t flags;         /**< Flag bits */
+		uint8_t majorVersion;  /**< Major version of this message */
+		uint32_t bodyLen;      /**< Length of the body data */
+		uint32_t serialNum;    /**< serial of this message */
+		uint32_t headerLen;    /**< Length of the header data */
+	};
+
+	/**
+	* AllJoyn Message Helper
+	*/
+	public value struct _AJ_Message sealed
+	{
+		uint32_t msgId;
+		AJ_MsgHeader hdr;
+		String^ iface;
+		String^ sender;
+		String^ destination;
+		String^ signature;
+		uint32_t sessionId;
+		uint32_t timestamp;
+		uint32_t ttl;
+	};
+
+	/**
 	* AllJoyn Message
 	*/
 	public ref struct AJ_Message sealed
 	{
+	public:
+		_AJ_Message Get();
+
 	internal:
 		::AJ_Message* _msg;
 	};
@@ -462,7 +495,6 @@ namespace AllJoynWinRTComponent
 		static uint32_t AJ_Reply_ID(uint32_t id);
 
 		// Helper functions
-		static uint32_t Get_AJ_Message_msgId(AJ_Message^ msg);
 		static String^ Get_AJ_Arg_v_string(AJ_Arg^ arg);
 
 	private:
