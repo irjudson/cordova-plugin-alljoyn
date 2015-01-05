@@ -286,6 +286,8 @@ void AJ_AES_ECB_128_ENCRYPT(const uint8_t* key, const uint8_t* in, uint8_t* out)
 
 void AJ_RandBytes(uint8_t* rand, uint32_t len)
 {
+    if (len == 0) return;
+    
     int result = SecRandomCopyBytes(kSecRandomDefault, len, rand);
     AJ_ASSERT(result == 0);
 }
