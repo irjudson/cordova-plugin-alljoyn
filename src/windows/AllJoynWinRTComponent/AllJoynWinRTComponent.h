@@ -18,6 +18,12 @@ using namespace Platform::Collections;
 namespace AllJoynWinRTComponent
 {
 	/**
+	* Delegate functions passed from Javascript
+	*/
+	public delegate String^ AJ_AuthPwdFunc();
+	public delegate void AJ_PeerAuthenticateCallback(uint8_t status);
+
+	/**
 	* Type for an interface description - NULL terminated array of strings.
 	*/
 	typedef IVector<IVector<String^>^>^ AJ_InterfaceDescription;
@@ -518,5 +524,7 @@ namespace AllJoynWinRTComponent
 	private:
 		static ::AJ_Object* RegisterObjects(const Array<AJ_Object^>^);
 		static void ReleaseObjects(::AJ_Object*, const Array<AJ_Object^>^);
+		static uint32_t PasswordCallback(uint8_t* buffer, uint32_t bufLen);
+		static void AuthCallback(const void* context, ::AJ_Status status);
     };
 }

@@ -555,19 +555,45 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 }
 
 
+// Pointer to Javascript function
+AllJoynWinRTComponent::AJ_AuthPwdFunc^ pwdCallback;
+
 void AllJoynWinRTComponent::AllJoyn::AJ_BusSetPasswordCallback(AJ_BusAttachment^ bus, AJ_AuthPwdFunc^ pwdCallback)
 {
-	::AJ_BusSetPasswordCallback(bus->_bus, pwdCallback);
+	::pwdCallback = pwdCallback;
+	::AJ_BusSetPasswordCallback(bus->_bus, AllJoynWinRTComponent::AllJoyn::PasswordCallback);
 }
 
 
+// Pointer to Javascript function
+AllJoynWinRTComponent::AJ_PeerAuthenticateCallback^ authCallback;
 char _peerBusName[MAX_STR_LENGTH];
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusAuthenticatePeer(AJ_BusAttachment^ bus, String^ peerBusName, AJ_PeerAuthenticateCallback^ pwdCallback)
 {
+	::authCallback = pwdCallback;
 	wcstombs(_peerBusName, peerBusName->Data(), MAX_STR_LENGTH);
-	AJ_Status status = static_cast<AJ_Status>(::AJ_BusAuthenticatePeer(bus->_bus, _peerBusName, pwdCallback));
+	AJ_Status status = static_cast<AJ_Status>(::AJ_BusAuthenticatePeer(bus->_bus, _peerBusName, AllJoynWinRTComponent::AllJoyn::AuthCallback, NULL));
+	
 	return status;
+}
+
+
+uint32_t AllJoynWinRTComponent::AllJoyn::PasswordCallback(uint8_t* buffer, uint32_t bufLen)
+{
+	String^ password = pwdCallback();
+	PLSTOMBS(password, _password);
+	int strLen = strlen(_password);
+	memcpy(buffer, _password, strlen(_password));
+	buffer[strLen] = '\0';
+
+	return password->Length();
+}
+
+
+void AllJoynWinRTComponent::AllJoyn::AuthCallback(const void* context, ::AJ_Status status)
+{
+	authCallback(status);
 }
 
 

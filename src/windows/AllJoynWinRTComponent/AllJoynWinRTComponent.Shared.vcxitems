@@ -141,15 +141,15 @@
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\target\winrt\aj_bus.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_bus.c">
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>	
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\target\winrt\aj_keyauthentication.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_keyauthentication.c">
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>		
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\target\winrt\aj_peer.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\ajtcl\src\aj_peer.c">
       <CompileAsWinRT>true</CompileAsWinRT>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>	
