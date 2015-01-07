@@ -732,7 +732,8 @@ static AJ_Status PSK_Marshal(AJ_Message* msg, uint8_t role)
         }
         pskctx.psklen = cred.len;
 #if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
-		pskctx.psk = AJ_CharsToString((const char*)cred.data);
+		MBSTOWCS((const char*)cred.data, psk);
+		pskctx.psk = ref new String(psk);
 #else
 		pskctx.psk = (uint8_t*) AJ_Malloc(pskctx.psklen);
 		if (!pskctx.psk) {
@@ -767,8 +768,7 @@ static AJ_Status PSK_Marshal(AJ_Message* msg, uint8_t role)
     if (AUTH_CLIENT == role) {
         AJ_SHA256_Update(kactx.hash, pskctx.hint, pskctx.hintlen);
 #if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
-		char _psk[16];
-		AJ_StringToChars(pskctx.psk, _psk);
+		PLSTOMBS(pskctx.psk, _psk);
 		AJ_SHA256_Update(kactx.hash, (const uint8_t*)_psk, pskctx.psklen);
 #else
 		AJ_SHA256_Update(kactx.hash, pskctx.psk, pskctx.psklen);
@@ -853,7 +853,8 @@ static AJ_Status PSK_Unmarshal(AJ_Message* msg, uint8_t role)
         }
         pskctx.psklen = cred.len;
 #if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
-		pskctx.psk = AJ_CharsToString((const char*)cred.data);
+		MBSTOWCS((const char*)cred.data, psk);
+		pskctx.psk = ref new String(psk);
 #else
 		pskctx.psk = (uint8_t*)AJ_Malloc(pskctx.psklen);
 		if (!pskctx.psk) {
@@ -890,8 +891,7 @@ static AJ_Status PSK_Unmarshal(AJ_Message* msg, uint8_t role)
     } else {
         AJ_SHA256_Update(kactx.hash, pskctx.hint, pskctx.hintlen);
 #if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
-		char _psk[16];
-		AJ_StringToChars(pskctx.psk, _psk);
+		PLSTOMBS(pskctx.psk, _psk);
 		AJ_SHA256_Update(kactx.hash, (const uint8_t*)_psk, pskctx.psklen);
 #else
 		AJ_SHA256_Update(kactx.hash, pskctx.psk, pskctx.psklen);

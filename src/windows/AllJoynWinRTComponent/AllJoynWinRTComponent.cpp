@@ -22,38 +22,6 @@ using namespace Windows::Foundation;
 #define AJ_PRX_ID_FLAG   0x02  /**< Identifies that a message belongs to the set of objects implemented by remote peers */
 
 
-#define STRUCT_COPY(name, attrib) _ ## name->attrib = name->attrib
-
-#define NULLABLE_TYPE_COPY(type, name)										\
-	type* _ ## name = NULL;													\
-	if (name != nullptr)													\
-	{																		\
-		*_ ## name = name->Value;											\
-	}																		\
-
-
-#define WCS2MBS(string)														\
-	char __ ## string[MAX_STR_LENGTH];										\
-	wcstombs(__ ## string, string->Data(), MAX_STR_LENGTH);					\
-	char* _ ## string = (string == nullptr) ? NULL : __ ## string			\
-
-
-#define SAFE_DEL(p)															\
-	if (p)																	\
-	{																		\
-		delete p;															\
-		p = NULL;															\
-	}
-
-
-#define SAFE_DEL_ARRAY(p)													\
-	if (p)																	\
-	{																		\
-		delete[] p;															\
-		p = NULL;															\
-	}
-
-
 static ::AJ_Object* _s_cachedLocalObjects = NULL;
 static ::AJ_Object* _s_cachedProxyObjects = NULL;
 static const Array<AllJoynWinRTComponent::AJ_Object^>^ s_cachedLocalObjects;
@@ -145,8 +113,7 @@ void AllJoynWinRTComponent::AllJoyn::AJ_ReleaseObjects()
 			if (objects[i])
 			{
 				// Copy path
-				char* _path = new char[MAX_STR_LENGTH];
-				AJ_StringToChars(objects[i]->path, _path);
+				PLSTODYNMBS(objects[i]->path, _path);
 				_objects[i].path = _path;
 
 				// Copy interface
@@ -168,8 +135,8 @@ void AllJoynWinRTComponent::AllJoyn::AJ_ReleaseObjects()
 							char* entry = NULL;
 							if (objects[i]->interfaces->GetAt(j)->GetAt(k))
 							{
-								entry = new char[MAX_STR_LENGTH];
-								AJ_StringToChars(objects[i]->interfaces->GetAt(j)->GetAt(k), entry);
+								PLSTODYNMBS(objects[i]->interfaces->GetAt(j)->GetAt(k), _entry);
+								entry = _entry;
 							}
 							interfaces[j][k] = entry;
 						}
@@ -234,8 +201,8 @@ IAsyncOperation<AllJoynWinRTComponent::AJ_Session>^ AllJoynWinRTComponent::AllJo
 		::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
 		::AJ_SessionOpts* _opts = NULL;
 
-		WCS2MBS(daemonName);
-		WCS2MBS(name);
+		PLSTOMBS(daemonName, _daemonName);
+		PLSTOMBS(name, _name);
 
 		if (opts)
 		{
@@ -286,7 +253,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 {
 	::AJ_Status _status = ::AJ_Status::AJ_ERR_INVALID;
 
-	WCS2MBS(signature);
+	PLSTOMBS(signature, _signature);
 
 	for (int i = 0; i < args->Length; i++)
 	{
@@ -326,13 +293,8 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 
 			/**< AllJoyn UTF-8 NULL terminated string basic type */
 			case 's':
-				char str[MAX_STR_LENGTH];
-				wcstombs(str, args[i]->Data(), MAX_STR_LENGTH);
+				PLSTOMBS(args[i], str);
 				val = &str;
-				break;
-
-			default:
-				// Unsupported type
 				break;
 		}
 
@@ -410,9 +372,12 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArg
 	_val.v_int64 = *arg->_arg->val.v_int64;
 	_val.v_uint64 = *arg->_arg->val.v_uint64;
 	_val.v_double = *arg->_arg->val.v_double;
-	_val.v_string = AJ_CharsToString(arg->_arg->val.v_string);
-	_val.v_objPath = AJ_CharsToString(arg->_arg->val.v_objPath);
-	_val.v_signature = AJ_CharsToString(arg->_arg->val.v_signature);
+	MBSTOWCS(arg->_arg->val.v_string, v_string);
+	_val.v_string = ref new String(v_string);
+	MBSTOWCS(arg->_arg->val.v_objPath, v_objPath);
+	_val.v_objPath = ref new String(v_objPath);
+	MBSTOWCS(arg->_arg->val.v_signature, v_signature);
+	_val.v_signature = ref new String(v_signature);
 	arg->val = _val;
 
 	return (static_cast<AJ_Status>(_status));
@@ -437,7 +402,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusHandleBus
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusFindAdvertisedName(AJ_BusAttachment^ bus, String^ namePrefix, uint8_t op)
 {
-	WCS2MBS(namePrefix);
+	PLSTOMBS(namePrefix, _namePrefix);
 	::AJ_Status _status = ::AJ_BusFindAdvertisedName(bus->_bus, _namePrefix, op);
 
 	return (static_cast<AJ_Status>(_status));
@@ -448,7 +413,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_FindBusAndCo
 {
 	SAFE_DEL(bus->_bus);
 	::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
-	WCS2MBS(serviceName);
+	PLSTOMBS(serviceName, _serviceName);
 	::AJ_Status _status = ::AJ_FindBusAndConnect(_bus, _serviceName, timeout);
 	bus->_bus = _bus;
 
@@ -458,7 +423,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_FindBusAndCo
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusSetSignalRule(AJ_BusAttachment^ bus, String^ ruleString, uint8_t rule)
 {
-	WCS2MBS(ruleString);
+	PLSTOMBS(ruleString, _ruleString);
 	::AJ_Status _status = ::AJ_BusSetSignalRule(bus->_bus, _ruleString, rule);
 
 	return (static_cast<AJ_Status>(_status));
@@ -473,7 +438,7 @@ void AllJoynWinRTComponent::AllJoyn::AJ_Disconnect(AJ_BusAttachment^ bus)
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusJoinSession(AJ_BusAttachment^ bus, String^ sessionHost, uint16_t port, AJ_SessionOpts^ opts)
 {
-	WCS2MBS(sessionHost);
+	PLSTOMBS(sessionHost, _sessionHost);
 	::AJ_SessionOpts* _opts = NULL;
 
 	if (opts)
@@ -533,7 +498,7 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 	Array<Object^>^ args = ref new Array<Object^>(signature->Length() + 1);
 	::AJ_Status _status = ::AJ_Status::AJ_ERR_INVALID;
 
-	WCS2MBS(signature);
+	PLSTOMBS(signature, _signature);
 
 	for (int i = 0; i < signature->Length(); i++)
 	{
@@ -571,7 +536,8 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 
 			/**< AllJoyn UTF-8 NULL terminated string basic type */
 		case 's':
-			String^ val = AJ_CharsToString(arg.val.v_string);
+			MBSTOWCS(arg.val.v_string, v_string);
+			String^ val = ref new String(v_string);
 			args[i + 1] = val;
 			break;
 		}
@@ -621,10 +587,31 @@ AllJoynWinRTComponent::_AJ_Message AllJoynWinRTComponent::AJ_Message::Get()
 	msg.hdr.bodyLen = _msg->hdr->bodyLen;
 	msg.hdr.serialNum = _msg->hdr->serialNum;
 	msg.hdr.headerLen = _msg->hdr->headerLen;
-	msg.iface = AJ_CharsToString(_msg->iface);
-	msg.sender = AJ_CharsToString(_msg->sender);
-	msg.destination = AJ_CharsToString(_msg->destination);
-	msg.signature = AJ_CharsToString(_msg->signature);
+
+	if (_msg->iface)
+	{
+		MBSTOWCS(_msg->iface, iface);
+		msg.iface = ref new String(iface);
+	}
+
+	if (_msg->sender)
+	{
+		MBSTOWCS(_msg->sender, sender);
+		msg.sender = ref new String(sender);
+	}
+
+	if (_msg->destination)
+	{
+		MBSTOWCS(_msg->destination, destination);
+		msg.destination = ref new String(destination);
+	}
+
+	if (_msg->signature)
+	{
+		MBSTOWCS(_msg->signature, signature);
+		msg.signature = ref new String(signature);
+	}
+
 	msg.sessionId = _msg->sessionId;
 	msg.timestamp = _msg->timestamp;
 	msg.ttl = _msg->ttl;

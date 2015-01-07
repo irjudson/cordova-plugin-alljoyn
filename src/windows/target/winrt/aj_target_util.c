@@ -45,20 +45,6 @@ extern "C"
 			 );
 }
 
-Platform::String^ AJ_CharsToString(const char* x)
-{
-	if (!x)
-	{
-		return nullptr;
-	}
-
-	static WCHAR wcs[MAX_STR_LENGTH];
-	static size_t nChars = 0;
-	mbstowcs_s(&nChars, wcs, MAX_STR_LENGTH, x, _TRUNCATE);
-
-	return ref new Platform::String(wcs);
-}
-
 #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP) */
 
 #pragma endregion
