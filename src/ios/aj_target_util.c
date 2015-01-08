@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <mach/clock.h>
+#include <mach/mach.h>
 #include "aj_debug.h"
 #include "aj_target.h"
 #include "aj_util.h"
@@ -47,8 +48,11 @@ uint32_t AJ_GetElapsedTime(AJ_Time* timer, uint8_t cumulative)
 {
     uint32_t elapsed;
     mach_timespec_t now;
+    clock_serv_t cclock;
 
-    clock_get_time(SYSTEM_CLOCK, &now);
+    host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);
+    clock_get_time(cclock, &now);;
+    mach_port_deallocate(mach_task_self(), cclock);
 
     elapsed = (1000 * (now.tv_sec - timer->seconds)) + ((now.tv_nsec / 1000000) - timer->milliseconds);
     if (!cumulative) {
@@ -61,7 +65,12 @@ uint32_t AJ_GetElapsedTime(AJ_Time* timer, uint8_t cumulative)
 void AJ_InitTimer(AJ_Time* timer)
 {
     mach_timespec_t now;
-    clock_get_time(SYSTEM_CLOCK, &now);
+    clock_serv_t cclock;
+
+    host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);
+    clock_get_time(cclock, &now);;
+    mach_port_deallocate(mach_task_self(), cclock);;
+
     timer->seconds = now.tv_sec;
     timer->milliseconds = now.tv_nsec / 1000000;
 
