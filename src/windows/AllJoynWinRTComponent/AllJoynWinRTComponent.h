@@ -464,6 +464,14 @@ namespace AllJoynWinRTComponent
 														   String^ name,
 														   uint16_t port,
 														   AJ_SessionOpts^ opts);
+		static IAsyncOperation<AJ_Status>^ AJ_StartService(AJ_BusAttachment^ bus,
+															String^ daemonName,
+															uint32_t timeout,
+															uint8_t connected,
+															uint16_t port,
+															String^ name,
+															uint32_t flags,
+															AJ_SessionOpts^ opts);
 		static void AJ_ReleaseObjects();
 		static AJ_Status AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout);
 		static AJ_Status AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args);

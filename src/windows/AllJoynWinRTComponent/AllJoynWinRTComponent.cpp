@@ -229,6 +229,45 @@ IAsyncOperation<AllJoynWinRTComponent::AJ_Session>^ AllJoynWinRTComponent::AllJo
 	});
 }
 
+IAsyncOperation<AllJoynWinRTComponent::AJ_Status>^ AllJoynWinRTComponent::AllJoyn::AJ_StartService
+(
+AllJoynWinRTComponent::AJ_BusAttachment^ bus,
+String^ daemonName,
+uint32_t timeout,
+uint8_t connected,
+uint16_t port,
+String^ name,
+uint32_t flags,
+AllJoynWinRTComponent::AJ_SessionOpts^ opts)
+{
+	return create_async([bus, daemonName, timeout, connected, port, name, flags, opts]() -> AllJoynWinRTComponent::AJ_Status
+	{
+		::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
+		::AJ_SessionOpts* _opts = NULL;
+
+		PLSTOMBS(daemonName, _daemonName);
+		PLSTOMBS(name, _name);
+
+		if (opts)
+		{
+			SAFE_DEL(_s_cachedSessionOpts);
+			_opts = new ::AJ_SessionOpts();
+			ZeroMemory(_opts, sizeof(_opts));
+
+			STRUCT_COPY(opts, isMultipoint);
+			STRUCT_COPY(opts, proximity);
+			STRUCT_COPY(opts, traffic);
+			STRUCT_COPY(opts, transports);
+
+			_s_cachedSessionOpts = _opts;
+		}
+
+		::AJ_Status _status = ::AJ_StartService(_bus, _daemonName, timeout, connected, port, _name, flags, _opts);
+		bus->_bus = _bus;
+
+		return (static_cast<AJ_Status>(_status));
+	});
+}
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout)
 {
@@ -247,7 +286,6 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMetho
 
 	return (static_cast<AJ_Status>(_status));
 }
-
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args)
 {
