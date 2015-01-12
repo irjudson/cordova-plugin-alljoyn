@@ -18,15 +18,21 @@
  ******************************************************************************/
 #define AJ_MODULE TARGET_UTIL
 
+#include <time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <mach/clock.h>
-#include <mach/mach.h>
 #include "aj_debug.h"
 #include "aj_target.h"
 #include "aj_util.h"
+
+#include <sys/time.h>
+#include <mach/mach_time.h>
+#include <mach/clock.h>
+#include <mach/mach.h>
+#include <libkern/OSByteOrder.h>
+#include <errno.h>
 
 uint8_t dbgTARGET_UTIL = 0;
 
@@ -35,25 +41,29 @@ void AJ_Sleep(uint32_t time)
     struct timespec waittime = { };
     waittime.tv_sec = time / 1000;
     waittime.tv_nsec = (time % 1000) * 1000000LL;
-
+    
     // nanosleep returns the amount of time slept before being interrupted by a signal,
     // so loop until the full sleep is finished
-    while (nanosleep(&waittime, &waittime) == -1) {
+    while (nanosleep(&waittime, &waittime) == -1 && errno == EINTR) {
         continue;
     }
-
+    
 }
 
 uint32_t AJ_GetElapsedTime(AJ_Time* timer, uint8_t cumulative)
 {
     uint32_t elapsed;
-    mach_timespec_t now;
+    struct timespec now;
+    
     clock_serv_t cclock;
-
-    host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);
-    clock_get_time(cclock, &now);;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
     mach_port_deallocate(mach_task_self(), cclock);
-
+    now.tv_sec = mts.tv_sec;
+    now.tv_nsec = mts.tv_nsec;
+    //clock_gettime(CLOCK_MONOTONIC, &now);
+    
     elapsed = (1000 * (now.tv_sec - timer->seconds)) + ((now.tv_nsec / 1000000) - timer->milliseconds);
     if (!cumulative) {
         timer->seconds = now.tv_sec;
@@ -62,24 +72,33 @@ uint32_t AJ_GetElapsedTime(AJ_Time* timer, uint8_t cumulative)
     return elapsed;
 }
 
+AJ_Status AJ_GetDebugTime(AJ_Time* timer)
+{
+    return AJ_ERR_UNKNOWN;
+}
+
+
 void AJ_InitTimer(AJ_Time* timer)
 {
-    mach_timespec_t now;
+    struct timespec now;
+    
     clock_serv_t cclock;
-
-    host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);
-    clock_get_time(cclock, &now);;
-    mach_port_deallocate(mach_task_self(), cclock);;
-
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    now.tv_sec = mts.tv_sec;
+    now.tv_nsec = mts.tv_nsec;
+    
+    //clock_gettime(CLOCK_MONOTONIC, &now);
     timer->seconds = now.tv_sec;
     timer->milliseconds = now.tv_nsec / 1000000;
-
 }
 
 int32_t AJ_GetTimeDifference(AJ_Time* timerA, AJ_Time* timerB)
 {
     int32_t diff;
-
+    
     diff = (1000 * (timerA->seconds - timerB->seconds)) + (timerA->milliseconds - timerB->milliseconds);
     return diff;
 }
@@ -119,6 +138,7 @@ void* AJ_Malloc(size_t sz)
 {
     return malloc(sz);
 }
+
 void* AJ_Realloc(void* ptr, size_t size)
 {
     return realloc(ptr, size);
@@ -146,7 +166,7 @@ void AJ_Free(void* mem)
 char*AJ_GetLine(char*str, size_t num, void*fp)
 {
     char*p = fgets(str, num, fp);
-
+    
     if (p != NULL) {
         size_t last = strlen(str) - 1;
         if (str[last] == '\n') {
@@ -219,24 +239,44 @@ int _AJ_DbgEnabled(const char* module)
 {
     char buffer[128];
     char* env;
-
+    
     strcpy(buffer, "ER_DEBUG_ALL");
     env = getenv(buffer);
     if (env && strcmp(env, "1") == 0) {
         return TRUE;
     }
-
+    
     strcpy(buffer, "ER_DEBUG_");
     strcat(buffer, module);
     env = getenv(buffer);
     if (env && strcmp(env, "1") == 0) {
         return TRUE;
     }
-
+    
     return FALSE;
 }
 
 #endif
+
+AJ_Status AJ_IntToString(int32_t val, char* buf, size_t buflen)
+{
+    AJ_Status status = AJ_OK;
+    int c = snprintf(buf, buflen, "%d", val);
+    if (c <= 0 || c > buflen) {
+        status = AJ_ERR_RESOURCES;
+    }
+    return status;
+}
+
+AJ_Status AJ_InetToString(uint32_t addr, char* buf, size_t buflen)
+{
+    AJ_Status status = AJ_OK;
+    int c = snprintf((char*)buf, buflen, "%u.%u.%u.%u", (addr & 0xFF000000) >> 24, (addr & 0x00FF0000) >> 16, (addr & 0x0000FF00) >> 8, (addr & 0x000000FF));
+    if (c <= 0 || c > buflen) {
+        status = AJ_ERR_RESOURCES;
+    }
+    return status;
+}
 
 uint16_t AJ_ByteSwap16(uint16_t x)
 {
