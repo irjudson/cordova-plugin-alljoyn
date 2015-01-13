@@ -334,6 +334,29 @@ namespace AllJoynWinRTComponent
 		AJ_Method_About_Icon_Get_Content = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(1)) << 8) | (4)),
 	};
 
+
+	public enum class AJ_ArgType
+	{
+		AJ_Arg_Invalid = '\0',				/**< AllJoyn invalid type */
+		AJ_Arg_ARRAY = 'a',					/**< AllJoyn array container type */
+		AJ_Arg_Boolean = 'b',				/**< AllJoyn boolean basic type */
+		AJ_Arg_Double = 'd',				/**< AllJoyn IEEE 754 double basic type */
+		AJ_Arg_Signature = 'g',				/**< AllJoyn signature basic type */
+		AJ_Arg_Handle = 'h',				/**< AllJoyn socket handle basic type */
+		AJ_Arg_Int32 = 'i',					/**< AllJoyn 32-bit signed integer basic type */
+		AJ_Arg_Int16 = 'n',					/**< AllJoyn 16-bit signed integer basic type */
+		AJ_Arg_Obj_Path = 'o',				/**< AllJoyn Name of an AllJoyn object instance basic type */
+		AJ_Arg_uint16 = 'q',				/**< AllJoyn 16-bit unsigned integer basic type */
+		AJ_Arg_String = 's',				/**< AllJoyn UTF-8 NULL terminated string basic type */
+		AJ_Arg_Uint64 = 't',				/**< AllJoyn 64-bit unsigned integer basic type */
+		AJ_Arg_Uint32 = 'u',				/**< AllJoyn 32-bit unsigned integer basic type */
+		AJ_Arg_Variant = 'v',				/**< AllJoyn variant container type */
+		AJ_Arg_Int64 = 'x',					/**< AllJoyn 64-bit signed integer basic type */
+		AJ_Arg_Byte = 'y',					/**< AllJoyn 8-bit unsigned integer basic type */
+		AJ_Arg_Struct = '(',				/**< AllJoyn struct container type */
+		AJ_Arg_Dict_Entry = '{',			/**< AllJoyn dictionary or map container type - an array of key-value pairs */
+	};
+
 	/**
 	* Type for a bus attachment
 	*/
@@ -403,7 +426,7 @@ namespace AllJoynWinRTComponent
 		_AJ_Message Get();
 
 	internal:
-		::AJ_Message* _msg;
+		::AJ_Message _msg;
 	};
 
 	/**
@@ -433,7 +456,7 @@ namespace AllJoynWinRTComponent
 		property _AJ_Arg val;
 
 	internal:
-		::AJ_Arg* _arg;
+		::AJ_Arg _arg;
 	};
 
 	/**
@@ -479,7 +502,6 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_CloseMsg(AJ_Message^ msg);
 		static IAsyncOperation<AJ_Status>^ AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout);
 		static AJ_Status AJ_UnmarshalArg(AJ_Message^ msg, AJ_Arg^ arg);
-		static AJ_Status AJ_CloseArg(AJ_Arg^ arg);
 		static AJ_Status AJ_BusHandleBusMessage(AJ_Message^ msg);
 		static AJ_Status AJ_BusFindAdvertisedName(AJ_BusAttachment^ bus, String^ namePrefix, uint8_t op);
 		static AJ_Status AJ_FindBusAndConnect(AJ_BusAttachment^ bus, String^ serviceName, uint32_t timeout);
@@ -491,6 +513,10 @@ namespace AllJoynWinRTComponent
 		static Array<Object^>^ AJ_UnmarshalArgs(AJ_Message^ msg, String^ signature);
 		static void AJ_BusSetPasswordCallback(AJ_BusAttachment^ bus, AJ_AuthPwdFunc^ pwdCallback);
 		static AJ_Status AJ_BusAuthenticatePeer(AJ_BusAttachment^ bus, String^ peerBusName, AJ_PeerAuthenticateCallback^ pwdCallback);
+		static AJ_Status AJ_BusReplyAcceptSession(AJ_Message^ msg, uint32_t accept);
+		static AJ_Status AJ_MarshalReplyMsg(AJ_Message^ methodCall, AJ_Message^ reply);
+		static AJ_Status AJ_MarshalArg(AJ_Message^ msg, AJ_Arg^ arg);
+		static void AJ_InitArg(AJ_Arg^ arg, uint8_t typeId, uint8_t flags, Object^ val, size_t len);
 
 		/////////////////////////////////////////////////////////////////////////
 		// Support functions for introspection

@@ -271,18 +271,10 @@ AllJoynWinRTComponent::AJ_SessionOpts^ opts)
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout)
 {
-	if (msg->_msg)
-	{
-		SAFE_DEL(msg->_msg->destination);
-	}
-
-	SAFE_DEL(msg->_msg);
-
-	msg->_msg = new ::AJ_Message();
 	char* _destination = new char[MAX_STR_LENGTH];
 	wcstombs(_destination, destination->Data(), MAX_STR_LENGTH);
 
-	::AJ_Status _status = ::AJ_MarshalMethodCall(bus->_bus, msg->_msg, msgId, _destination, sessionId, flags, timeout);
+	::AJ_Status _status = ::AJ_MarshalMethodCall(bus->_bus, &msg->_msg, msgId, _destination, sessionId, flags, timeout);
 
 	return (static_cast<AJ_Status>(_status));
 }
@@ -344,7 +336,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 			arg.val.v_data = (void*)val;
 			arg.sigPtr = NULL;
 			arg.container = NULL;
-			_status = ::AJ_MarshalArg(msg->_msg, &arg);
+			_status = ::AJ_MarshalArg(&msg->_msg, &arg);
 
 			if (_status != AJ_OK)
 			{
@@ -365,7 +357,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_DeliverMsg(AJ_Message^ msg)
 {
-	::AJ_Status _status = ::AJ_DeliverMsg(msg->_msg);
+	::AJ_Status _status = ::AJ_DeliverMsg(&msg->_msg);
 
 	return (static_cast<AJ_Status>(_status));
 }
@@ -373,9 +365,8 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_DeliverMsg(A
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseMsg(AJ_Message^ msg)
 {
-	::AJ_Status _status = ::AJ_CloseMsg(msg->_msg);
-	SAFE_DEL(msg->_msg->destination);
-	SAFE_DEL(msg->_msg);
+	::AJ_Status _status = ::AJ_CloseMsg(&msg->_msg);
+	SAFE_DEL(msg->_msg.destination);
 
 	return (static_cast<AJ_Status>(_status));
 }
@@ -385,9 +376,7 @@ IAsyncOperation<AllJoynWinRTComponent::AJ_Status>^ AllJoynWinRTComponent::AllJoy
 {
 	return create_async([bus, msg, timeout]() -> AllJoynWinRTComponent::AJ_Status
 	{
-		SAFE_DEL(msg->_msg);
-		msg->_msg = new ::AJ_Message();
-		::AJ_Status _status = ::AJ_UnmarshalMsg(bus->_bus, msg->_msg, timeout);
+		::AJ_Status _status = ::AJ_UnmarshalMsg(bus->_bus, &msg->_msg, timeout);
 
 		return (static_cast<AJ_Status>(_status));
 	});
@@ -396,25 +385,23 @@ IAsyncOperation<AllJoynWinRTComponent::AJ_Status>^ AllJoynWinRTComponent::AllJoy
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArg(AJ_Message^ msg, AJ_Arg^ arg)
 {
-	SAFE_DEL(arg->_arg);
-	arg->_arg = new ::AJ_Arg();
-	::AJ_Status _status = ::AJ_UnmarshalArg(msg->_msg, arg->_arg);
+	::AJ_Status _status = ::AJ_UnmarshalArg(&msg->_msg, &arg->_arg);
 
 	AllJoynWinRTComponent::_AJ_Arg _val;
-	_val.v_byte = *arg->_arg->val.v_byte;
-	_val.v_int16 = *arg->_arg->val.v_int16;
-	_val.v_uint16 = *arg->_arg->val.v_uint16;
-	_val.v_bool = *arg->_arg->val.v_bool;
-	_val.v_uint32 = *arg->_arg->val.v_uint32;
-	_val.v_int32 = *arg->_arg->val.v_int32;
-	_val.v_int64 = *arg->_arg->val.v_int64;
-	_val.v_uint64 = *arg->_arg->val.v_uint64;
-	_val.v_double = *arg->_arg->val.v_double;
-	MBSTOWCS(arg->_arg->val.v_string, v_string);
+	_val.v_byte = *arg->_arg.val.v_byte;
+	_val.v_int16 = *arg->_arg.val.v_int16;
+	_val.v_uint16 = *arg->_arg.val.v_uint16;
+	_val.v_bool = *arg->_arg.val.v_bool;
+	_val.v_uint32 = *arg->_arg.val.v_uint32;
+	_val.v_int32 = *arg->_arg.val.v_int32;
+	_val.v_int64 = *arg->_arg.val.v_int64;
+	_val.v_uint64 = *arg->_arg.val.v_uint64;
+	_val.v_double = *arg->_arg.val.v_double;
+	MBSTOWCS(arg->_arg.val.v_string, v_string);
 	_val.v_string = ref new String(v_string);
-	MBSTOWCS(arg->_arg->val.v_objPath, v_objPath);
+	MBSTOWCS(arg->_arg.val.v_objPath, v_objPath);
 	_val.v_objPath = ref new String(v_objPath);
-	MBSTOWCS(arg->_arg->val.v_signature, v_signature);
+	MBSTOWCS(arg->_arg.val.v_signature, v_signature);
 	_val.v_signature = ref new String(v_signature);
 	arg->val = _val;
 
@@ -422,17 +409,9 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArg
 }
 
 
-AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseArg(AJ_Arg^ arg)
-{
-	SAFE_DEL(arg->_arg);
-
-	return AJ_Status::AJ_OK;
-}
-
-
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusHandleBusMessage(AJ_Message^ msg)
 {
-	::AJ_Status _status = ::AJ_BusHandleBusMessage(msg->_msg);
+	::AJ_Status _status = ::AJ_BusHandleBusMessage(&msg->_msg);
 
 	return (static_cast<AJ_Status>(_status));
 }
@@ -509,18 +488,10 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusLeaveSess
 
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalSignal(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t ttl)
 {
-	if (msg->_msg)
-	{
-		SAFE_DEL(msg->_msg->destination);
-	}
-
-	SAFE_DEL(msg->_msg);
-
-	msg->_msg = new ::AJ_Message();
 	char* _destination = new char[MAX_STR_LENGTH];
 	wcstombs(_destination, destination->Data(), MAX_STR_LENGTH);
 
-	::AJ_Status _status = ::AJ_MarshalSignal(bus->_bus, msg->_msg, msgId, _destination, sessionId, flags, ttl);
+	::AJ_Status _status = ::AJ_MarshalSignal(bus->_bus, &msg->_msg, msgId, _destination, sessionId, flags, ttl);
 
 	return (static_cast<AJ_Status>(_status));
 }
@@ -542,7 +513,7 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 	{
 		::AJ_Arg arg;
 		uint8_t typeId = (uint8_t)_signature[i];
-		_status = ::AJ_UnmarshalArg(msg->_msg, &arg);
+		_status = ::AJ_UnmarshalArg(&msg->_msg, &arg);
 		args[i + 1] = nullptr;
 
 		if (_status != AJ_OK)
@@ -635,6 +606,43 @@ void AllJoynWinRTComponent::AllJoyn::AuthCallback(const void* context, ::AJ_Stat
 }
 
 
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusReplyAcceptSession(AllJoynWinRTComponent::AJ_Message^ msg, uint32_t accept)
+{
+	return static_cast<AllJoynWinRTComponent::AJ_Status>(::AJ_BusReplyAcceptSession(&msg->_msg, accept));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalReplyMsg(AllJoynWinRTComponent::AJ_Message^ methodCall, AllJoynWinRTComponent::AJ_Message^ reply)
+{
+	::AJ_Status status = ::AJ_MarshalReplyMsg(&methodCall->_msg, &reply->_msg);
+
+	return static_cast<AllJoynWinRTComponent::AJ_Status>(status);
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArg(AllJoynWinRTComponent::AJ_Message^ msg, AllJoynWinRTComponent::AJ_Arg^ arg)
+{
+	return static_cast<AllJoynWinRTComponent::AJ_Status>(::AJ_MarshalArg(&msg->_msg, &arg->_arg));
+}
+
+
+void AllJoynWinRTComponent::AllJoyn::AJ_InitArg(AllJoynWinRTComponent::AJ_Arg^ arg, uint8_t typeId, uint8_t flags, Object^ val, size_t len)
+{
+	if (typeId == AJ_ARG_STRING)
+	{
+		String^ valStr = (String^)val;
+		PLSTOMBS(valStr, _val);
+		::AJ_InitArg(&arg->_arg, typeId, flags, _val, len);
+	}
+	else
+	{
+		Array<uint8_t>^ valArray = (Array<uint8_t>^)val;
+		uint8_t* _val = valArray->Data;
+		::AJ_InitArg(&arg->_arg, typeId, flags, _val, len);
+	}
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Helper functions
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -643,42 +651,42 @@ AllJoynWinRTComponent::_AJ_Message AllJoynWinRTComponent::AJ_Message::Get()
 {
 	AllJoynWinRTComponent::_AJ_Message msg;
 
-	msg.msgId = _msg->msgId;
-	msg.hdr.endianess = _msg->hdr->endianess;
-	msg.hdr.msgType = _msg->hdr->msgType;
-	msg.hdr.flags = _msg->hdr->flags;
-	msg.hdr.majorVersion = _msg->hdr->majorVersion;
-	msg.hdr.bodyLen = _msg->hdr->bodyLen;
-	msg.hdr.serialNum = _msg->hdr->serialNum;
-	msg.hdr.headerLen = _msg->hdr->headerLen;
+	msg.msgId = _msg.msgId;
+	msg.hdr.endianess = _msg.hdr->endianess;
+	msg.hdr.msgType = _msg.hdr->msgType;
+	msg.hdr.flags = _msg.hdr->flags;
+	msg.hdr.majorVersion = _msg.hdr->majorVersion;
+	msg.hdr.bodyLen = _msg.hdr->bodyLen;
+	msg.hdr.serialNum = _msg.hdr->serialNum;
+	msg.hdr.headerLen = _msg.hdr->headerLen;
 
-	if (_msg->iface)
+	if (_msg.iface)
 	{
-		MBSTOWCS(_msg->iface, iface);
+		MBSTOWCS(_msg.iface, iface);
 		msg.iface = ref new String(iface);
 	}
 
-	if (_msg->sender)
+	if (_msg.sender)
 	{
-		MBSTOWCS(_msg->sender, sender);
+		MBSTOWCS(_msg.sender, sender);
 		msg.sender = ref new String(sender);
 	}
 
-	if (_msg->destination)
+	if (_msg.destination)
 	{
-		MBSTOWCS(_msg->destination, destination);
+		MBSTOWCS(_msg.destination, destination);
 		msg.destination = ref new String(destination);
 	}
 
-	if (_msg->signature)
+	if (_msg.signature)
 	{
-		MBSTOWCS(_msg->signature, signature);
+		MBSTOWCS(_msg.signature, signature);
 		msg.signature = ref new String(signature);
 	}
 
-	msg.sessionId = _msg->sessionId;
-	msg.timestamp = _msg->timestamp;
-	msg.ttl = _msg->ttl;
+	msg.sessionId = _msg.sessionId;
+	msg.timestamp = _msg.timestamp;
+	msg.ttl = _msg.ttl;
 
 	return msg;
 }
