@@ -652,13 +652,17 @@ AllJoynWinRTComponent::_AJ_Message AllJoynWinRTComponent::AJ_Message::Get()
 	AllJoynWinRTComponent::_AJ_Message msg;
 
 	msg.msgId = _msg.msgId;
-	msg.hdr.endianess = _msg.hdr->endianess;
-	msg.hdr.msgType = _msg.hdr->msgType;
-	msg.hdr.flags = _msg.hdr->flags;
-	msg.hdr.majorVersion = _msg.hdr->majorVersion;
-	msg.hdr.bodyLen = _msg.hdr->bodyLen;
-	msg.hdr.serialNum = _msg.hdr->serialNum;
-	msg.hdr.headerLen = _msg.hdr->headerLen;
+
+	if (_msg.hdr)
+	{
+		msg.hdr.endianess = _msg.hdr->endianess;
+		msg.hdr.msgType = _msg.hdr->msgType;
+		msg.hdr.flags = _msg.hdr->flags;
+		msg.hdr.majorVersion = _msg.hdr->majorVersion;
+		msg.hdr.bodyLen = _msg.hdr->bodyLen;
+		msg.hdr.serialNum = _msg.hdr->serialNum;
+		msg.hdr.headerLen = _msg.hdr->headerLen;
+	}
 
 	if (_msg.iface)
 	{
