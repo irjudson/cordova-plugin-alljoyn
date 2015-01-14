@@ -1,12 +1,12 @@
 ﻿#include "pch.h"
 
+#include "AllJoynWinRTComponent.h"
 #include "aj_init.h"
 #include "aj_util.h"
 #include "aj_target_util.h"
 #include "aj_helper.h"
 #include "aj_msg.h"
 #include "aj_connect.h"
-#include "AllJoynWinRTComponent.h"
 #include "aj_debug.h"
 #include <ppltasks.h>
 
@@ -224,6 +224,65 @@ IAsyncOperation<AllJoynWinRTComponent::AJ_Session>^ AllJoynWinRTComponent::AllJo
 		AJ_Session retObj;
 		retObj.sessionId = _sessionId;
 		retObj.status = static_cast<uint8_t>(_status);
+
+		return retObj;
+	});
+}
+
+
+IAsyncOperation<AllJoynWinRTComponent::AJ_Session>^ AllJoynWinRTComponent::AllJoyn::AJ_StartClientByName
+(
+AllJoynWinRTComponent::AJ_BusAttachment^ bus,
+String^ daemonName,
+uint32_t timeout,
+uint8_t connected,
+String^ name,
+uint16_t port,
+AllJoynWinRTComponent::AJ_SessionOpts^ opts,
+String^ fullName)
+{
+	return create_async([bus, daemonName, timeout, connected, name, port, opts, fullName]() -> AllJoynWinRTComponent::AJ_Session
+	{
+		::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
+		::AJ_SessionOpts* _opts = NULL;
+
+		PLSTOMBS(daemonName, mbsDaemonName);
+		char* _daemonName = (daemonName == nullptr ? NULL : mbsDaemonName);
+		PLSTOMBS(name, mbsName);
+		char* _name = (name == nullptr ? NULL : mbsName);
+		PLSTOMBS(fullName, mbsFullName);
+		char* _fullName = (fullName == nullptr ? NULL : mbsFullName);
+
+		if (opts)
+		{
+			SAFE_DEL(_s_cachedSessionOpts);
+			_opts = new ::AJ_SessionOpts();
+			ZeroMemory(_opts, sizeof(_opts));
+
+			STRUCT_COPY(opts, isMultipoint);
+			STRUCT_COPY(opts, proximity);
+			STRUCT_COPY(opts, traffic);
+			STRUCT_COPY(opts, transports);
+
+			_s_cachedSessionOpts = _opts;
+		}
+
+		uint32_t _sessionId;
+		::AJ_Status _status = ::AJ_StartClientByName(_bus, _daemonName, timeout, connected, _name, port, &_sessionId, _opts, _fullName);
+		bus->_bus = _bus;
+		AJ_Session retObj;
+		retObj.sessionId = _sessionId;
+		retObj.status = static_cast<uint8_t>(_status);
+
+		if (_fullName)
+		{
+			MBSTOWCS(_fullName, wcsFullName);
+			retObj.fullName = ref new String(wcsFullName);
+		}
+		else
+		{
+			retObj.fullName = nullptr;
+		}
 
 		return retObj;
 	});

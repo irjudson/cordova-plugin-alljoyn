@@ -466,6 +466,7 @@ namespace AllJoynWinRTComponent
 	{
 		uint8_t status;
 		uint32_t sessionId;
+		String^ fullName;
 	};
 
 	/**
@@ -487,6 +488,14 @@ namespace AllJoynWinRTComponent
 														   String^ name,
 														   uint16_t port,
 														   AJ_SessionOpts^ opts);
+		static IAsyncOperation<AJ_Session>^ AJ_StartClientByName(AJ_BusAttachment^ bus,
+															     String^ daemonName,
+															     uint32_t timeout,
+															     uint8_t connected,
+															     String^ name,
+															     uint16_t port,
+															     AJ_SessionOpts^ opts,
+																 String^ fullName);														   
 		static IAsyncOperation<AJ_Status>^ AJ_StartService(AJ_BusAttachment^ bus,
 															String^ daemonName,
 															uint32_t timeout,
