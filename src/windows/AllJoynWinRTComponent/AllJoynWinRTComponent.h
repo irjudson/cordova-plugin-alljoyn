@@ -494,8 +494,7 @@ namespace AllJoynWinRTComponent
 															     uint8_t connected,
 															     String^ name,
 															     uint16_t port,
-															     AJ_SessionOpts^ opts,
-																 String^ fullName);														   
+															     AJ_SessionOpts^ opts);												   
 		static IAsyncOperation<AJ_Status>^ AJ_StartService(AJ_BusAttachment^ bus,
 															String^ daemonName,
 															uint32_t timeout,
@@ -526,6 +525,7 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_MarshalReplyMsg(AJ_Message^ methodCall, AJ_Message^ reply);
 		static AJ_Status AJ_MarshalArg(AJ_Message^ msg, AJ_Arg^ arg);
 		static void AJ_InitArg(AJ_Arg^ arg, uint8_t typeId, uint8_t flags, Object^ val, size_t len);
+		static AJ_Status AJ_MarshalPropertyArgs(AJ_Message^ msg, uint32_t propId);
 
 		/////////////////////////////////////////////////////////////////////////
 		// Support functions for introspection

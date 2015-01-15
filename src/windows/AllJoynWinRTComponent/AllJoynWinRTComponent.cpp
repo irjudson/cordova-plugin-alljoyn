@@ -81,8 +81,6 @@ void AllJoynWinRTComponent::AllJoyn::ReleaseObjects(::AJ_Object* _objects, const
 					delete[] _objects[j].interfaces[k];
 				}
 			}
-
-			SAFE_DEL_ARRAY(_objects[j].interfaces);
 		}
 	}
 
@@ -238,10 +236,9 @@ uint32_t timeout,
 uint8_t connected,
 String^ name,
 uint16_t port,
-AllJoynWinRTComponent::AJ_SessionOpts^ opts,
-String^ fullName)
+AllJoynWinRTComponent::AJ_SessionOpts^ opts)
 {
-	return create_async([bus, daemonName, timeout, connected, name, port, opts, fullName]() -> AllJoynWinRTComponent::AJ_Session
+	return create_async([bus, daemonName, timeout, connected, name, port, opts]() -> AllJoynWinRTComponent::AJ_Session
 	{
 		::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
 		::AJ_SessionOpts* _opts = NULL;
@@ -250,8 +247,7 @@ String^ fullName)
 		char* _daemonName = (daemonName == nullptr ? NULL : mbsDaemonName);
 		PLSTOMBS(name, mbsName);
 		char* _name = (name == nullptr ? NULL : mbsName);
-		PLSTOMBS(fullName, mbsFullName);
-		char* _fullName = (fullName == nullptr ? NULL : mbsFullName);
+		char _fullName[AJ_MAX_SERVICE_NAME_SIZE];
 
 		if (opts)
 		{
@@ -699,6 +695,12 @@ void AllJoynWinRTComponent::AllJoyn::AJ_InitArg(AllJoynWinRTComponent::AJ_Arg^ a
 		uint8_t* _val = valArray->Data;
 		::AJ_InitArg(&arg->_arg, typeId, flags, _val, len);
 	}
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalPropertyArgs(AllJoynWinRTComponent::AJ_Message^ msg, uint32_t propId)
+{
+	return static_cast<AllJoynWinRTComponent::AJ_Status>(::AJ_MarshalPropertyArgs(&msg->_msg, propId));
 }
 
 
