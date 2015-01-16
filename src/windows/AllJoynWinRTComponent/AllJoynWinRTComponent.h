@@ -18,12 +18,6 @@ using namespace Platform::Collections;
 namespace AllJoynWinRTComponent
 {
 	/**
-	* Delegate functions passed from Javascript
-	*/
-	public delegate String^ AJ_AuthPwdFunc();
-	public delegate void AJ_PeerAuthenticateCallback(uint8_t status);
-
-	/**
 	* Type for an interface description - NULL terminated array of strings.
 	*/
 	typedef IVector<IVector<String^>^>^ AJ_InterfaceDescription;
@@ -332,6 +326,10 @@ namespace AllJoynWinRTComponent
 
 		AJ_Method_About_Icon_Get_Url = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(1)) << 8) | (3)),
 		AJ_Method_About_Icon_Get_Content = ((uint32_t)(((uint32_t)AJ_Introspect::AJ_Bus_ID_Flag) << 24) | (((uint32_t)(6)) << 16) | (((uint32_t)(1)) << 8) | (4)),
+
+		AJ_Prop_Get = 0,        /**< index for property method get */
+		AJ_Prop_Set = 1,        /**< index for property method set */
+		AJ_Prop_Get_All = 2,        /**< index for property method get_all */
 	};
 
 
@@ -355,6 +353,20 @@ namespace AllJoynWinRTComponent
 		AJ_Arg_Byte = 'y',					/**< AllJoyn 8-bit unsigned integer basic type */
 		AJ_Arg_Struct = '(',				/**< AllJoyn struct container type */
 		AJ_Arg_Dict_Entry = '{',			/**< AllJoyn dictionary or map container type - an array of key-value pairs */
+	};
+
+	public enum class AJ_MsgFlag
+	{
+		AJ_No_Flags = 0x00,					/**< No message flags */
+		AJ_Flag_No_Reply_Expected = 0x01,   /**< Not expecting a reply */
+		AJ_Flag_Auto_Start = 0x02,			/**< Auto start the service */
+		AJ_Flag_Allow_Remote_Msg = 0x04,    /**< Allow messeages from remote hosts */
+		AJ_Flag_Sessionless = 0x10,			/**< Sessionless message */
+		AJ_Flag_Global_Broadcast = 0x20,    /**< Global (bus-to-bus) broadcast */
+		AJ_Flag_Compressed = 0x40,			/**< Header is compressed */
+		AJ_Flag_Encrypted = 0x80,			/**< Body is encrypted */
+
+		Alljoyn_Flag_Sessionless = 0x10		/**< Deprecated: Use AJ_FLAG_SESSIONLESS instead */
 	};
 
 	/**
@@ -470,6 +482,14 @@ namespace AllJoynWinRTComponent
 	};
 
 	/**
+	* Delegate functions passed from Javascript
+	*/
+	public delegate String^ AJ_AuthPwdFunc();
+	public delegate void AJ_PeerAuthenticateCallback(uint8_t status);
+	public delegate AJ_Status AJ_BusPropGetCallback(AJ_Message^ replyMsg, uint32_t propId);
+	public delegate AJ_Status AJ_BusPropSetCallback(AJ_Message^ replyMsg, uint32_t propId);
+
+	/**
 	* AllJoyn Windows Runtime
 	*/
     public ref class AllJoyn sealed
@@ -526,6 +546,8 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_MarshalArg(AJ_Message^ msg, AJ_Arg^ arg);
 		static void AJ_InitArg(AJ_Arg^ arg, uint8_t typeId, uint8_t flags, Object^ val, size_t len);
 		static AJ_Status AJ_MarshalPropertyArgs(AJ_Message^ msg, uint32_t propId);
+		static AJ_Status AJ_BusPropGet(AJ_Message^ msg, AJ_BusPropGetCallback^ callback);
+		static AJ_Status AJ_BusPropSet(AJ_Message^ msg, AJ_BusPropSetCallback^ callback);
 
 		/////////////////////////////////////////////////////////////////////////
 		// Support functions for introspection
@@ -569,5 +591,7 @@ namespace AllJoynWinRTComponent
 		static void ReleaseObjects(::AJ_Object*, const Array<AJ_Object^>^);
 		static uint32_t PasswordCallback(uint8_t* buffer, uint32_t bufLen);
 		static void AuthCallback(const void* context, ::AJ_Status status);
+		static ::AJ_Status BusPropGetCallback(::AJ_Message* replyMsg, uint32_t propId, void* context);
+		static ::AJ_Status BusPropSetCallback(::AJ_Message* replyMsg, uint32_t propId, void* context);
     };
 }

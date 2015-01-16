@@ -59,7 +59,7 @@ void AllJoynWinRTComponent::AllJoyn::ReleaseObjects(::AJ_Object* _objects, const
 		if (_objects[j].path)
 		{
 			// Free path
-			SAFE_DEL(_objects[j].path);
+			SAFE_DEL_ARRAY(_objects[j].path);
 
 			// Free interfaces
 			int nInterfaces = objects[j]->interfaces->Size;
@@ -74,13 +74,15 @@ void AllJoynWinRTComponent::AllJoyn::ReleaseObjects(::AJ_Object* _objects, const
 					{
 						if (_objects[j].interfaces[k][m])
 						{
-							delete _objects[j].interfaces[k][m];
+							delete[] _objects[j].interfaces[k][m];
 						}
 					}
 
 					delete[] _objects[j].interfaces[k];
 				}
 			}
+
+			delete[] _objects[j].interfaces;
 		}
 	}
 
@@ -421,7 +423,6 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_DeliverMsg(A
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_CloseMsg(AJ_Message^ msg)
 {
 	::AJ_Status _status = ::AJ_CloseMsg(&msg->_msg);
-	SAFE_DEL(msg->_msg.destination);
 
 	return (static_cast<AJ_Status>(_status));
 }
@@ -701,6 +702,48 @@ void AllJoynWinRTComponent::AllJoyn::AJ_InitArg(AllJoynWinRTComponent::AJ_Arg^ a
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalPropertyArgs(AllJoynWinRTComponent::AJ_Message^ msg, uint32_t propId)
 {
 	return static_cast<AllJoynWinRTComponent::AJ_Status>(::AJ_MarshalPropertyArgs(&msg->_msg, propId));
+}
+
+
+// Pointer to Javascript function
+AllJoynWinRTComponent::AJ_BusPropGetCallback^ busPropGetCallback;
+AllJoynWinRTComponent::AJ_Message^ getMsg;
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusPropGet(AJ_Message^ msg, AJ_BusPropGetCallback^ busPropGetCallback)
+{
+	::busPropGetCallback = busPropGetCallback;
+	::AJ_Status status = ::AJ_BusPropGet(&msg->_msg, AllJoynWinRTComponent::AllJoyn::BusPropGetCallback, NULL);
+	::getMsg = msg;
+	return static_cast<AJ_Status>(status);
+}
+
+
+::AJ_Status AllJoynWinRTComponent::AllJoyn::BusPropGetCallback(::AJ_Message* replyMsg, uint32_t propId, void* context)
+{
+	AllJoynWinRTComponent::AJ_Status status = ::busPropGetCallback(::getMsg, propId);
+
+	return static_cast<::AJ_Status>(status);
+}
+
+
+// Pointer to Javascript function
+AllJoynWinRTComponent::AJ_BusPropSetCallback^ busPropSetCallback;
+AllJoynWinRTComponent::AJ_Message^ setMsg;
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusPropSet(AJ_Message^ msg, AJ_BusPropSetCallback^ busPropSetCallback)
+{
+	::busPropSetCallback = busPropSetCallback;
+	::AJ_Status status = ::AJ_BusPropSet(&msg->_msg, AllJoynWinRTComponent::AllJoyn::BusPropSetCallback, NULL);
+	::setMsg = msg;
+	return static_cast<AJ_Status>(status);
+}
+
+
+::AJ_Status AllJoynWinRTComponent::AllJoyn::BusPropSetCallback(::AJ_Message* replyMsg, uint32_t propId, void* context)
+{
+	AllJoynWinRTComponent::AJ_Status status = ::busPropSetCallback(::setMsg, propId);
+
+	return static_cast<::AJ_Status>(status);
 }
 
 
