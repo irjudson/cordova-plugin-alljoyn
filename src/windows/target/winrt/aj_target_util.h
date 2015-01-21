@@ -23,16 +23,79 @@
 
 #define MAX_STR_LENGTH WCHAR_MAX >> 2
 
+
 #if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 
-// Convert Platform::String^ to char*
-#define AJ_StringToChars(string, chars)									\
-	if (chars)															\
-	{																	\
-		wcstombs(chars, string->Data(), MAX_STR_LENGTH);				\
+
+#define STRUCT_COPY(name, attrib) _ ## name->attrib = name->attrib
+
+
+#define NULLABLE_TYPE_COPY(type, name)										\
+	type* _ ## name = NULL;													\
+	if (name != nullptr)													\
+	{																		\
+		*_ ## name = name->Value;											\
+	}	
+
+
+#define PLSTOMBS(wcs, mbs)																				\
+	char mbs[MAX_STR_LENGTH];																			\
+	do																									\
+	{																									\
+		int strLen = WideCharToMultiByte(CP_UTF8, 0, wcs->Data(), wcs->Length(), mbs, 0, NULL, NULL);	\
+		WideCharToMultiByte(CP_UTF8, 0, wcs->Data(), wcs->Length(), mbs, MAX_STR_LENGTH, NULL, NULL);	\
+		mbs[strLen] = '\0';																				\
+	}																									\
+	while (0);	
+
+
+#define PLSTODYNMBS(wcs, mbs)																			\
+	char* mbs = NULL;																					\
+	do																									\
+	{																									\
+		int strLen = WideCharToMultiByte(CP_UTF8, 0, wcs->Data(), wcs->Length(), mbs, 0, NULL, NULL);	\
+		mbs = new char[strLen + 1];																		\
+		WideCharToMultiByte(CP_UTF8, 0, wcs->Data(), wcs->Length(), mbs, strLen, NULL, NULL);			\
+		mbs[strLen] = '\0';																				\
+	}																									\
+	while (0);	
+
+
+#define WCSTOMBS(wcs, mbs)																				\
+	char mbs[MAX_STR_LENGTH];																			\
+	do																									\
+	{																									\
+		int strLen = WideCharToMultiByte(CP_UTF8, 0, wcs, wcslen(wcs), mbs, 0, NULL, NULL);				\
+		WideCharToMultiByte(CP_UTF8, 0, wcs, wcslen(wcs), mbs, MAX_STR_LENGTH, NULL, NULL);				\
+		mbs[strLen] = '\0';																				\
+	}																									\
+	while (0);		
+
+
+#define MBSTOWCS(mbs, wcs)																				\
+	wchar_t wcs[MAX_STR_LENGTH];																		\
+	do																									\
+	{																									\
+		int strLen = MultiByteToWideChar(CP_UTF8, 0, mbs, strlen(mbs), wcs, 0);							\
+		MultiByteToWideChar(CP_UTF8, 0, mbs, strlen(mbs), wcs, MAX_STR_LENGTH);							\
+		wcs[strLen] = '\0';																				\
+	}																									\
+	while (0);	
+
+
+#define SAFE_DEL(p)															\
+	if (p)																	\
+	{																		\
+		delete p;															\
+		p = NULL;															\
 	}
 
-// Convert char* to Platform::String^
-extern Platform::String^ AJ_CharsToString(const char* x);
+
+#define SAFE_DEL_ARRAY(p)													\
+	if (p)																	\
+	{																		\
+		delete[] p;															\
+		p = NULL;															\
+	}
 
 #endif // (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
