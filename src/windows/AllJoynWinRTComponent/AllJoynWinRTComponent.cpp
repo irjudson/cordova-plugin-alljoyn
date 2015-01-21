@@ -200,9 +200,10 @@ IAsyncOperation<AllJoynWinRTComponent::AJ_Session>^ AllJoynWinRTComponent::AllJo
 	{
 		::AJ_BusAttachment* _bus = new ::AJ_BusAttachment();
 		::AJ_SessionOpts* _opts = NULL;
-
-		PLSTOMBS(daemonName, _daemonName);
-		PLSTOMBS(name, _name);
+		PLSTOMBS(daemonName, mbsDaemonName);
+		char* _daemonName = (daemonName == nullptr ? NULL : mbsDaemonName);
+		PLSTOMBS(name, mbsName);
+		char* _name = (name == nullptr ? NULL : mbsName);
 
 		if (opts)
 		{
