@@ -30,10 +30,10 @@ var AllJoyn = {
         };
    */
 	joinSession: function(success, error, service) {
-	  var successCallback = function(sessionId, sessionHost) {
+	  var successCallback = function(result) {
 	    var session = {
-	      sessionId: sessionId,
-	      sessionHost: sessionHost,
+	      sessionId: result[0],
+	      sessionHost: result[1],
 	      callMethod: function(callMethodSuccess, callMethodError, path, indexList, parameterType, parameters) {
 	        var signature = getSignature(indexList, registeredObjects);
 	        exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [signature, path, indexList, parameterType, parameters]);

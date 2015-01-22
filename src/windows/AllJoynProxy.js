@@ -69,6 +69,28 @@ cordova.commandProxy.add("AllJoyn", {
     if (status != AllJoynWinRTComponent.AJ_Status.aj_OK) {
       error(status);
     }
+  },
+  joinSession: function(success, error, parameters) {
+    var service = parameters[0];
+
+    // Use null value as session options, which means that AllJoyn will use the default options
+    var sessionOptions = null;
+    var status = AllJoynWinRTComponent.AllJoyn.aj_BusJoinSession(busAttachment, service.name, service.port, sessionOptions);
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      var joinSessionReplyId = AllJoynWinRTComponent.AllJoyn.aj_Reply_ID(AllJoynWinRTComponent.AllJoyn.aj_Bus_Message_ID(1, 0, 10));
+      messageHandler.addHandler(
+        joinSessionReplyId, 'uu',
+        function(messageObject, messageBody) {
+          console.log("Received message: ", messageObject, messageBody);
+          var sessionId = messageBody[2];
+          var sessionHost = messageObject.sender;
+          success([sessionId, sessionHost]);
+          messageHandler.removeHandler(joinSessionReplyId, this[1]);
+        }
+      );
+    } else {
+      error(status);
+    }
   }
 });
 
