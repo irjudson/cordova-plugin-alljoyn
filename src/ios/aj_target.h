@@ -25,9 +25,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
-#include <endian.h>
-
-#define __linux
+#include <machine/endian.h>
+#include <libkern/OSByteOrder.h>
 
 #ifndef TRUE
 #define TRUE (1)
@@ -77,11 +76,10 @@ extern uint8_t dbgTARGET_UTIL;
  */
 #define AJ_Reboot()
 
-#define AJ_EXPORT
+#define AJ_CreateNewGUID AJ_RandBytes
 
-/*
- * Main method allows argc, argv
- */
-#define MAIN_ALLOWS_ARGS
+#define AJ_GetDebugTime(x) _AJ_GetDebugTime(x)
+
+#define AJ_EXPORT
 
 #endif
