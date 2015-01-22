@@ -3,6 +3,16 @@ var argscheck = require('cordova/argscheck'),
 	exec = require('cordova/exec'),
 	cordova = require('cordova');
 
+var registeredObjects = [];
+
+var getSignature = function(indexList, objectsList) {
+  var objects = objectsList[indexList[0]];
+  var object = objects[indexList[1]];
+  var interfaces = object.interfaces;
+  var signature = interfaces[indexList[2]][indexList[3] + 1]
+  return signature;
+}
+
 var AllJoyn = {
 	connect: function(success, error) {
 	  exec(success, error, "AllJoyn", "connect");
@@ -20,15 +30,17 @@ var AllJoyn = {
         };
    */
 	joinSession: function(success, error, service) {
-	  var successCallback = function(sessionId, sessionTarget) {
+	  var successCallback = function(sessionId, sessionHost) {
 	    var session = {
 	      sessionId: sessionId,
-	      sessionTarget: sessionTarget,
-	      callMethod: function(callMethodSuccess, callMethodError, path, indexList, parameters) {
-	        exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [path, indexList, parameters]);
+	      sessionHost: sessionHost,
+	      callMethod: function(callMethodSuccess, callMethodError, path, indexList, parameterType, parameters) {
+	        var signature = getSignature(indexList, registeredObjects);
+	        exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [signature, path, indexList, parameterType, parameters]);
 	      },
-	      sendSignal: function(sendSignalSuccess, sendSignalError, path, indexList, parameters) {
-	        exec(sendSignalSuccess, sendSignalError, "AllJoyn", "invokeMember", [path, indexList, parameters]);
+	      sendSignal: function(sendSignalSuccess, sendSignalError, path, indexList, parameterType, parameters) {
+	        var signature = getSignature(indexList, registeredObjects);
+	        exec(sendSignalSuccess, sendSignalError, "AllJoyn", "invokeMember", [signature, path, indexList, parameterType, parameters]);
 	      }
 	    };
 	    success(session);
@@ -37,7 +49,10 @@ var AllJoyn = {
 	  exec(successCallback, error, "AllJoyn", "joinSession", [service]);
 	},
 	registerObjects: function(success, error, applicationObjects, proxyObjects) {
-	  exec(success, error, "AllJoyn", "registerObjects", [applicationObjects, proxyObjects]);
+	  exec(function() {
+	    registeredObjects = [applicationObjects, proxyObjects];
+	    success();
+	  }, error, "AllJoyn", "registerObjects", [applicationObjects, proxyObjects]);
 	},
 	AJ_OK: 0
 };
