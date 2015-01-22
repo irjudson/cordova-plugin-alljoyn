@@ -31,16 +31,18 @@ var AllJoyn = {
    */
 	joinSession: function(success, error, service) {
 	  var successCallback = function(result) {
+	    var sessionId = result[0];
+	    var sessionHost = result[1];
 	    var session = {
-	      sessionId: result[0],
-	      sessionHost: result[1],
-	      callMethod: function(callMethodSuccess, callMethodError, path, indexList, parameterType, parameters) {
+	      sessionId: sessionId,
+	      sessionHost: sessionHost,
+	      callMethod: function(callMethodSuccess, callMethodError, destination, path, indexList, parameterType, parameters) {
 	        var signature = getSignature(indexList, registeredObjects);
-	        exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [signature, path, indexList, parameterType, parameters]);
+	        exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, parameterType, parameters]);
 	      },
-	      sendSignal: function(sendSignalSuccess, sendSignalError, path, indexList, parameterType, parameters) {
+	      sendSignal: function(sendSignalSuccess, sendSignalError, destination, path, indexList, parameterType, parameters) {
 	        var signature = getSignature(indexList, registeredObjects);
-	        exec(sendSignalSuccess, sendSignalError, "AllJoyn", "invokeMember", [signature, path, indexList, parameterType, parameters]);
+	        exec(sendSignalSuccess, sendSignalError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, parameterType, parameters]);
 	      }
 	    };
 	    success(session);
@@ -50,7 +52,7 @@ var AllJoyn = {
 	},
 	registerObjects: function(success, error, applicationObjects, proxyObjects) {
 	  exec(function() {
-	    registeredObjects = [applicationObjects, proxyObjects];
+	    registeredObjects = [null, applicationObjects, proxyObjects];
 	    success();
 	  }, error, "AllJoyn", "registerObjects", [applicationObjects, proxyObjects]);
 	},

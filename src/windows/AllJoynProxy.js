@@ -91,6 +91,42 @@ cordova.commandProxy.add("AllJoyn", {
     } else {
       error(status);
     }
+  },
+  invokeMember: function(success, error, parameters) {
+    var sessionId = parameters[0],
+      destination = parameters[1],
+      signature = parameters[2],
+      path = parameters[3],
+      indexList = parameters[4],
+      argsType = parameters[5],
+      args = parameters[6];
+
+    var messageId = AllJoynWinRTComponent.AllJoyn.aj_Encode_Message_ID(indexList[0], indexList[1], indexList[2], indexList[3]);
+    var message = new AllJoynWinRTComponent.AJ_Message();
+    // An empty string is used as a destination, because that ends up being converted to null platform string
+    // in the Windows Runtime Component.
+    var destination = destination || "";
+    var status = AllJoynWinRTComponent.AllJoyn.aj_MarshalSignal(busAttachment, message, messageId, destination, sessionId, 0, 0);
+    console.log("aj_MarshalSignal resulted in a status of " + status);
+
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      status = AllJoynWinRTComponent.AllJoyn.aj_MarshalArgs(message, argsType, args);
+      console.log("aj_MarshalArgs resulted in a status of " + status);
+    }
+
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      status = AllJoynWinRTComponent.AllJoyn.aj_DeliverMsg(message);
+      console.log("aj_DeliverMsg resulted in a status of " + status);
+    }
+
+    // Messages must be closed to free resources.
+    AllJoynWinRTComponent.AllJoyn.aj_CloseMsg(message);
+
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      success();
+    } else {
+      error(status);
+    }
   }
 });
 
