@@ -99,17 +99,28 @@ cordova.commandProxy.add("AllJoyn", {
       path = parameters[3],
       indexList = parameters[4],
       argsType = parameters[5],
-      args = parameters[6];
+      args = parameters[6],
+      responseType = parameters[7];
+
+    var isSignal = (signature.lastIndexOf("!") === 0);
 
     var messageId = AllJoynWinRTComponent.AllJoyn.aj_Encode_Message_ID(indexList[0], indexList[1], indexList[2], indexList[3]);
     var message = new AllJoynWinRTComponent.AJ_Message();
     // An empty string is used as a destination, because that ends up being converted to null platform string
     // in the Windows Runtime Component.
     var destination = destination || "";
-    var status = AllJoynWinRTComponent.AllJoyn.aj_MarshalSignal(busAttachment, message, messageId, destination, sessionId, 0, 0);
-    console.log("aj_MarshalSignal resulted in a status of " + status);
 
-    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+    var status;
+
+    if (isSignal) {
+      status = AllJoynWinRTComponent.AllJoyn.aj_MarshalSignal(busAttachment, message, messageId, destination, sessionId, 0, 0);
+      console.log("aj_MarshalSignal resulted in a status of " + status);
+    } else {
+      status = AllJoynWinRTComponent.AllJoyn.aj_MarshalMethodCall(busAttachment, message, messageId, destination, sessionId, 0, 0, 0);
+      console.log("aj_MarshalMethodCall resulted in a status of " + status);
+    }
+
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK && args) {
       status = AllJoynWinRTComponent.AllJoyn.aj_MarshalArgs(message, argsType, args);
       console.log("aj_MarshalArgs resulted in a status of " + status);
     }
@@ -123,7 +134,20 @@ cordova.commandProxy.add("AllJoyn", {
     AllJoynWinRTComponent.AllJoyn.aj_CloseMsg(message);
 
     if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
-      success();
+      if (isSignal) {
+        success();
+      } else {
+        replyMessageId = AllJoynWinRTComponent.AllJoyn.aj_Reply_ID(messageId);
+        messageHandler.addHandler(
+          replyMessageId, responseType,
+          function(messageObject, messageBody) {
+            console.log("Received message: ", messageObject, messageBody);
+            var response = messageBody[1];
+            success(response);
+            messageHandler.removeHandler(replyMessageId, this[1]);
+          }
+        );
+      }
     } else {
       error(status);
     }

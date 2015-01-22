@@ -36,13 +36,13 @@ var AllJoyn = {
 	    var session = {
 	      sessionId: sessionId,
 	      sessionHost: sessionHost,
-	      callMethod: function(callMethodSuccess, callMethodError, destination, path, indexList, parameterType, parameters) {
+	      callMethod: function(callMethodSuccess, callMethodError, destination, path, indexList, inParameterType, parameters, outParameterType) {
 	        var signature = getSignature(indexList, registeredObjects);
-	        exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, parameterType, parameters]);
+	        exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, inParameterType, parameters, outParameterType]);
 	      },
-	      sendSignal: function(sendSignalSuccess, sendSignalError, destination, path, indexList, parameterType, parameters) {
+	      sendSignal: function(sendSignalSuccess, sendSignalError, destination, path, indexList, inParameterType, parameters) {
 	        var signature = getSignature(indexList, registeredObjects);
-	        exec(sendSignalSuccess, sendSignalError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, parameterType, parameters]);
+	        exec(sendSignalSuccess, sendSignalError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, inParameterType, parameters]);
 	      }
 	    };
 	    success(session);
