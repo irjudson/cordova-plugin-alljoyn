@@ -9,7 +9,7 @@ After cloning this repository, a plugin developer needs to get ajtcl by running 
 
 ```
 $ git clone https://git.allseenalliance.org/gerrit/core/ajtcl src/ajtcl
-$ git -C src/ajtcl checkout RB14.06
+$ git -C src/ajtcl checkout RB14.12
 ```
 
 For plugin users, above is taken care of by a hook run after plugin is added with Cordova scripts.
