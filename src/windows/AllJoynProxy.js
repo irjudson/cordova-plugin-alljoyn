@@ -58,7 +58,7 @@ cordova.commandProxy.add("AllJoyn", {
         console.log("Received message: ", messageObject, messageBody);
         messageHandler.removeHandler(foundAdvertisedNameMessageId, this[1]);
         if (messageBody[0] == AllJoynWinRTComponent.AJ_Status.aj_OK) {
-          success(messageBody[1]);
+          success({ name: messageBody[1] });
         } else {
           error(messageBody[0])
         }

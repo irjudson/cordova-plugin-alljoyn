@@ -17,6 +17,9 @@ var AllJoyn = {
 	connect: function(success, error) {
 	  exec(success, error, "AllJoyn", "connect");
 	},
+  /*
+   * When name found, success callback is called with parameter { name: "the.name.found" }
+   */
 	startFindingAdvertisedName: function(success, error, name) {
 	  exec(success, error, "AllJoyn", "startFindingAdvertisedName", [name]);
 	},
