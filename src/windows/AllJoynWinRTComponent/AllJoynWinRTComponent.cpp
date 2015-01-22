@@ -82,7 +82,7 @@ void AllJoynWinRTComponent::AllJoyn::ReleaseObjects(::AJ_Object* _objects, const
 				}
 			}
 
-			delete[] _objects[j].interfaces;
+			//delete[] _objects[j].interfaces;
 		}
 	}
 
@@ -444,23 +444,26 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArg
 {
 	::AJ_Status _status = ::AJ_UnmarshalArg(&msg->_msg, &arg->_arg);
 
-	AllJoynWinRTComponent::_AJ_Arg _val;
-	_val.v_byte = *arg->_arg.val.v_byte;
-	_val.v_int16 = *arg->_arg.val.v_int16;
-	_val.v_uint16 = *arg->_arg.val.v_uint16;
-	_val.v_bool = *arg->_arg.val.v_bool;
-	_val.v_uint32 = *arg->_arg.val.v_uint32;
-	_val.v_int32 = *arg->_arg.val.v_int32;
-	_val.v_int64 = *arg->_arg.val.v_int64;
-	_val.v_uint64 = *arg->_arg.val.v_uint64;
-	_val.v_double = *arg->_arg.val.v_double;
-	MBSTOWCS(arg->_arg.val.v_string, v_string);
-	_val.v_string = ref new String(v_string);
-	MBSTOWCS(arg->_arg.val.v_objPath, v_objPath);
-	_val.v_objPath = ref new String(v_objPath);
-	MBSTOWCS(arg->_arg.val.v_signature, v_signature);
-	_val.v_signature = ref new String(v_signature);
-	arg->val = _val;
+	if (_status == ::AJ_Status::AJ_OK)
+	{
+		AllJoynWinRTComponent::_AJ_Arg _val;
+		_val.v_byte = *arg->_arg.val.v_byte;
+		_val.v_int16 = *arg->_arg.val.v_int16;
+		_val.v_uint16 = *arg->_arg.val.v_uint16;
+		_val.v_bool = *arg->_arg.val.v_bool;
+		_val.v_uint32 = *arg->_arg.val.v_uint32;
+		_val.v_int32 = *arg->_arg.val.v_int32;
+		_val.v_int64 = *arg->_arg.val.v_int64;
+		_val.v_uint64 = *arg->_arg.val.v_uint64;
+		_val.v_double = *arg->_arg.val.v_double;
+		MBSTOWCS(arg->_arg.val.v_string, v_string);
+		_val.v_string = ref new String(v_string);
+		MBSTOWCS(arg->_arg.val.v_objPath, v_objPath);
+		_val.v_objPath = ref new String(v_objPath);
+		MBSTOWCS(arg->_arg.val.v_signature, v_signature);
+		_val.v_signature = ref new String(v_signature);
+		arg->val = _val;
+	}
 
 	return (static_cast<AJ_Status>(_status));
 }
