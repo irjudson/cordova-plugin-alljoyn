@@ -10,7 +10,7 @@ module.exports = function (context) {
 
   var ajtclDirectory = path.join('plugins', 'org.allseen.alljoyn', 'src', 'ajtcl');
   var ajtclUpstream = 'https://git.allseenalliance.org/gerrit/core/ajtcl';
-  var ajtclBranch = 'RB14.06';
+  var ajtclBranch = 'RB14.12';
 
   if (fs.existsSync(ajtclDirectory)) {
     console.log("Found ajtcl from: " + path.resolve(ajtclDirectory));
