@@ -548,6 +548,7 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_MarshalPropertyArgs(AJ_Message^ msg, uint32_t propId);
 		static AJ_Status AJ_BusPropGet(AJ_Message^ msg, AJ_BusPropGetCallback^ callback);
 		static AJ_Status AJ_BusPropSet(AJ_Message^ msg, AJ_BusPropSetCallback^ callback);
+		static AJ_Status AJ_SetProxyObjectPath(const Array<AJ_Object^>^ proxyObjects, uint32_t msgId, String^ objPath);
 
 		/////////////////////////////////////////////////////////////////////////
 		// Support functions for introspection

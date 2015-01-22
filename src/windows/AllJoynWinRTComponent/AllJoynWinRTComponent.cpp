@@ -748,6 +748,15 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusPropSet(A
 }
 
 
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_SetProxyObjectPath(const Array<AJ_Object^>^ proxyObjects, uint32_t msgId, String^ objPath)
+{
+	PLSTOMBS(objPath, _objPath);
+	::AJ_Status status = ::AJ_SetProxyObjectPath(_s_cachedProxyObjects, msgId, _objPath);
+
+	return static_cast<AJ_Status>(status);
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Helper functions
 //////////////////////////////////////////////////////////////////////////////////////////
