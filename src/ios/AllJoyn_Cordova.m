@@ -115,7 +115,7 @@ AJ_BusAttachment _bus;
     }];
 }
 
--(void)startFindingAdvertisedName:(CDVInvokedUrlCommand*)command {
+-(void)addAdvertisedNameListener:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
         NSString* name = [command argumentAtIndex:0];
 
@@ -145,7 +145,7 @@ AJ_BusAttachment _bus;
     }];
 }
 
--(void)startFindingInterfaces:(CDVInvokedUrlCommand*)command {
+-(void)addInterfacesListener:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
         NSArray* interfaces = [command argumentAtIndex:0];
         AJ_Status status = [self askForAboutAnnouncements:&_bus forObjectsImplementing:interfaces];
@@ -223,9 +223,7 @@ AJ_BusAttachment _bus;
     }];
 }
 -(void)invokeMember:(CDVInvokedUrlCommand*) command {
-    //    exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [signature, path, indexList, parameterType, parameters]);
-
-    // [sessionId, destination, signature, path, indexList, parameterType, parameters]
+    //    exec(callMethodSuccess, callMethodError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, inParameterType, parameters, outParameterType]);
     [self.commandDelegate runInBackground:^{
         NSNumber* sessionId = [command argumentAtIndex:0];
         NSString* destination = [command argumentAtIndex:1];
@@ -234,6 +232,8 @@ AJ_BusAttachment _bus;
         NSArray* indexList = [command argumentAtIndex:4];
         NSString* parameterTypes = [command argumentAtIndex:5];
         NSArray* parameters = [command argumentAtIndex:6 withDefault:[NSArray new]];
+        NSString* outParameterSignature = [command argumentAtIndex:7];
+
         AJ_Status status = AJ_OK;
 
         if( ![signature isKindOfClass:[NSString class]] ||
@@ -292,7 +292,7 @@ AJ_BusAttachment _bus;
 
         printf("Invoke Member %s\n", *member);
         uint32_t msgId = AJ_ENCODE_MESSAGE_ID(
-                                              [listIndex unsignedIntValue] + 1,
+                                              [listIndex unsignedIntValue],
                                               [objectIndex unsignedIntValue],
                                               [interfaceIndex unsignedIntValue],
                                               [memberIndex unsignedIntValue]);
@@ -310,6 +310,13 @@ AJ_BusAttachment _bus;
 
         AJ_Message msg;
 
+        status = AJ_SetProxyObjectPath([self proxyObjects], msgId, [path UTF8String]);
+        if(status != AJ_OK) {
+            printf("AJ_SetProxyObjectPath failed with %s\n", AJ_StatusText(status));
+            goto e_Exit;
+        }
+
+        printf("MemberType: %u, MemberSignature: %s, IsSecure %u\n", memberType, memberSignature, isSecure);
         switch(memberType) {
             case AJ_METHOD_MEMBER:
                 status = AJ_MarshalMethodCall(&_bus, &msg, msgId, [destination UTF8String], [sessionId unsignedIntValue], 0, MSG_TIMEOUT);
@@ -317,19 +324,60 @@ AJ_BusAttachment _bus;
                     printf("Failure marshalling method call");
                     goto e_Exit;
                 }
-                if(parameterTypes != nil && [parameterTypes length] > 1) {
+                if(parameterTypes != nil && [parameterTypes length] > 0) {
+                    [self marshalArgumentsFor:&msg withSignature:parameterTypes havingValues:parameters];
                 }
                 break;
             case AJ_SIGNAL_MEMBER:
+                status = AJ_MarshalSignal(&_bus, &msg, msgId, [destination UTF8String], [sessionId unsignedIntValue], 0, MSG_TIMEOUT);
+                if(status != AJ_OK) {
+                    printf("AJ_MarshalSignal failed with %s\n", AJ_StatusText(status));
+                    goto e_Exit;
+                }
+
+                if(parameterTypes != nil && [parameterTypes length] > 0) {
+                    status = [self marshalArgumentsFor:&msg withSignature:parameterTypes havingValues:parameters];
+                    if(status != AJ_OK) {
+                        printf("Failure marshalling arguments: %s\n", AJ_StatusText(status));
+                        goto e_Exit;
+                    }
+                }
                 break;
             case AJ_PROPERTY_MEMBER:
                 break;
             default:
-
+                status = AJ_ERR_FAILURE;
                 break;
         }
 
-        printf("MemberType: %u, MemberSignature: %s, IsSecure %u\n", memberType, memberSignature, isSecure);
+        if(AJ_OK == status) {
+            status = AJ_DeliverMsg(&msg);
+
+
+            NSNumber* methodKey = [NSNumber numberWithInt:AJ_REPLY_ID(msgId)];
+            MethodReplyHandler methodReplyHandler = ^bool(AJ_Message* pMsg) {
+                AJ_Status status;
+
+                NSMutableDictionary* responseDictionary = [NSMutableDictionary new];
+                NSMutableArray* outValues = [NSMutableArray new];
+
+                if(outParameterSignature != nil && [outParameterSignature length] > 0) {
+                    status = [self unmarshalArgumentsFor:pMsg withSignature:outParameterSignature toValues:outValues];
+                }
+
+                [responseDictionary setObject:@"invokeMember success" forKey:@"message"];
+                [responseDictionary setObject:[NSString stringWithUTF8String:pMsg->sender] forKey:@"sender"];
+
+                [responseDictionary setObject:outValues forKey:@"outValues"];
+                [self sendProgressDictionary:responseDictionary toCallback:[command callbackId] withKeepCallback:false];
+                [[self methodReplyHandlers] removeObjectForKey:methodKey];
+                return true;
+            };
+
+            [[self methodReplyHandlers] setObject:methodReplyHandler forKey:methodKey];
+
+        }
+
 
     e_Exit:
         if(status != AJ_OK) {
@@ -338,6 +386,178 @@ AJ_BusAttachment _bus;
         return;
 
     }];
+}
+
+#define MAX_NESTED_CONTAINERS 10
+
+
+-(AJ_Status)unmarshalArgumentsFor:(AJ_Message*)pMsg withSignature:(NSString*)signature toValues:(NSMutableArray*)values {
+    AJ_Status status = AJ_OK;
+    printf("unmarshalArgumentsFor: %s\n", [signature UTF8String]);
+
+    unsigned long len = [signature length];
+
+    AJ_Arg arg = {0};
+
+    for(int i =0;i<len;i++) {
+        char currentType = [signature UTF8String][i];
+        //Reset arg to initial values
+        arg.container = 0;
+        arg.flags = 0;
+        arg.len = 0;
+        arg.sigPtr = 0;
+        arg.val.v_data = NULL;
+
+        switch(currentType) {
+            case AJ_ARG_STRING: {
+                status = AJ_UnmarshalArg(pMsg, &arg);
+                NSString* stringArg = [NSString stringWithUTF8String:arg.val.v_string];
+                [values addObject:stringArg];
+                break;
+            }
+            default: {
+                status = AJ_ERR_FAILURE;
+                break;
+            }
+        }
+
+        if(status != AJ_OK) {
+            break;
+        }
+    }
+e_Exit:
+    return status;
+}
+
+-(AJ_Status)marshalArgumentsFor:(AJ_Message*)pMsg withSignature:(NSString*)signature havingValues:(NSArray*)values {
+
+    printf("marshalArgumentsFor %s\n", [signature UTF8String]);
+    AJ_Status status = AJ_OK;
+    if(!pMsg) {
+        status = AJ_ERR_INVALID;
+        return status;
+    }
+
+    unsigned long len = [signature length];
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    uint64_t u64;
+    int16_t i16;
+    int32_t i32;
+    int64_t i64;
+    double d;
+
+
+    unsigned int currentParameter = 0;
+
+    AJ_Arg arg = {0};
+    AJ_Arg containerArgs[MAX_NESTED_CONTAINERS];
+    unsigned int nextContainerArgIndex = 0;
+    for(int i = 0; i < len; ++i) {
+        char current = [signature UTF8String][i];
+        //Reset arg to initial values
+        arg.container = 0;
+        arg.flags = 0;
+        arg.len = 0;
+        arg.sigPtr = 0;
+        arg.val.v_data = NULL;
+        arg.typeId = (uint8_t)current;
+
+
+        //        /*
+        //         * Message argument types
+        //         */
+        //#define AJ_ARG_INVALID           '\0'   /**< AllJoyn invalid type */
+        //#define AJ_ARG_ARRAY             'a'    /**< AllJoyn array container type */
+        //#define AJ_ARG_BOOLEAN           'b'    /**< AllJoyn boolean basic type */
+        //#define AJ_ARG_DOUBLE            'd'    /**< AllJoyn IEEE 754 double basic type */
+        //#define AJ_ARG_SIGNATURE         'g'    /**< AllJoyn signature basic type */
+        //#define AJ_ARG_HANDLE            'h'    /**< AllJoyn socket handle basic type */
+        //#define AJ_ARG_INT32             'i'    /**< AllJoyn 32-bit signed integer basic type */
+        //#define AJ_ARG_INT16             'n'    /**< AllJoyn 16-bit signed integer basic type */
+        //#define AJ_ARG_OBJ_PATH          'o'    /**< AllJoyn Name of an AllJoyn object instance basic type */
+        //#define AJ_ARG_UINT16            'q'    /**< AllJoyn 16-bit unsigned integer basic type */
+        //#define AJ_ARG_STRING            's'    /**< AllJoyn UTF-8 NULL terminated string basic type */
+        //#define AJ_ARG_UINT64            't'    /**< AllJoyn 64-bit unsigned integer basic type */
+        //#define AJ_ARG_UINT32            'u'    /**< AllJoyn 32-bit unsigned integer basic type */
+        //#define AJ_ARG_VARIANT           'v'    /**< AllJoyn variant container type */
+        //#define AJ_ARG_INT64             'x'    /**< AllJoyn 64-bit signed integer basic type */
+        //#define AJ_ARG_BYTE              'y'    /**< AllJoyn 8-bit unsigned integer basic type */
+        //#define AJ_ARG_STRUCT            '('    /**< AllJoyn struct container type */
+        //#define AJ_ARG_DICT_ENTRY        '{'    /**< AllJoyn dictionary or map container type - an array of key-value pairs */
+
+        switch (current) {
+
+            case AJ_ARG_BOOLEAN:
+                u32 = [[values objectAtIndex:currentParameter++] unsignedIntValue];
+                arg.val.v_bool = &u32;
+                break;
+            case AJ_ARG_INT16:
+                i16 = [[values objectAtIndex:currentParameter++] shortValue];
+                arg.val.v_int16 = &i16;
+                break;
+            case AJ_ARG_INT32:
+                i32 = [[values objectAtIndex:currentParameter++] intValue];
+                arg.val.v_int32 = &i32;
+                break;
+            case AJ_ARG_INT64:
+                i64 = [[values objectAtIndex:currentParameter++] longLongValue];
+                arg.val.v_int64 = &i64;
+                break;
+            case AJ_ARG_UINT16:
+                u16 = [[values objectAtIndex:currentParameter++] unsignedShortValue];
+                arg.val.v_uint16 = &u16;
+                break;
+            case AJ_ARG_UINT32:
+                u32 = [[values objectAtIndex:currentParameter++] unsignedIntValue];
+                arg.val.v_uint32 = &u32;
+                break;
+            case AJ_ARG_UINT64:
+                u64 = [[values objectAtIndex:currentParameter++] unsignedLongLongValue];
+                arg.val.v_uint64 = &u64;
+                break;
+            case AJ_ARG_DOUBLE:
+                d = [[values objectAtIndexedSubscript:currentParameter++] doubleValue];
+                arg.val.v_double = &d;
+                break;
+            case AJ_ARG_BYTE:
+                u8 = [[values objectAtIndexedSubscript:currentParameter++] charValue];
+                arg.val.v_byte = &u8;
+                break;
+            case AJ_ARG_STRING:
+                arg.val.v_string = [[values objectAtIndexedSubscript:currentParameter++] UTF8String];
+
+                printf("string %s\n", arg.val.v_string);
+                break;
+            case AJ_ARG_ARRAY:
+            case AJ_ARG_DICT_ENTRY:
+            case AJ_ARG_HANDLE:
+            case AJ_ARG_INVALID:
+                status = AJ_ERR_INVALID;
+                break;
+            case AJ_ARG_OBJ_PATH:
+            case AJ_ARG_SIGNATURE:
+            case AJ_ARG_STRUCT:
+
+            case AJ_ARG_VARIANT:
+                status = AJ_ERR_REJECTED;
+                break;
+
+            default:
+                status = AJ_ERR_UNKNOWN;
+                break;
+        }
+
+        if(status == AJ_OK) {
+            status = AJ_MarshalArg(pMsg, &arg);
+        } else {
+            break;
+        }
+    }
+
+e_Exit:
+    return status;
 }
 
 -(void)testMarshal:(CDVInvokedUrlCommand*)command {
@@ -387,7 +607,6 @@ AJ_BusAttachment _bus;
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:[NSArray arrayWithObject:[NSNumber numberWithUnsignedLongLong:objectList]]] callbackId:[command callbackId]];
     }];
 }
-
 
 // Constructor for plugin class
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView {
