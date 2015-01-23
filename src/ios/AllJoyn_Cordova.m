@@ -78,7 +78,8 @@ AJ_BusAttachment _bus;
 
                 //setup object
                 //newObject.flags = [[object objectForKey:@"flags"] unsignedIntValue];
-                newObject.path = [[object objectForKey:@"path"] UTF8String];
+                //TODO: Need to track this memory allocation
+                newObject.path = strdup([[object objectForKey:@"path"] UTF8String]);
                 AJ_InterfaceDescription* interfaces = AJ_InterfacesCreate();
 
                 for (NSArray* interface in [object objectForKey:@"interfaces"]) {
@@ -237,7 +238,6 @@ AJ_BusAttachment _bus;
         AJ_Status status = AJ_OK;
 
         if( ![signature isKindOfClass:[NSString class]] ||
-           ![path isKindOfClass:[NSString class]] ||
            ![indexList isKindOfClass:[NSArray class]]) {
 
             [self sendErrorMessage:@"inokeMember: Invalid Argument" toCallback:[command callbackId] withKeepCallback:false];
@@ -259,38 +259,7 @@ AJ_BusAttachment _bus;
            ![memberIndex isKindOfClass:[NSNumber class]]) {
             [self sendErrorMessage:@"invokeMember: non-number index encountered" toCallback:[command callbackId] withKeepCallback:false];
         }
-        //TODO: save app and prx objects and use listIndex to pick the right one
-        AJ_Object* object = [self proxyObjects];
-        uint counter = [objectIndex unsignedIntValue];
-        while(counter) {
-            if(!++object){
-                [self sendErrorMessage:@"invokeMember: invalid object index" toCallback:[command callbackId] withKeepCallback:false];
-                return;
-            }
-            counter--;
-        }
 
-        counter = [interfaceIndex unsignedIntValue];
-        const AJ_InterfaceDescription* interface = object->interfaces;
-        while(counter) {
-            if(!++interface) {
-                [self sendErrorMessage:@"invokeMember: invalid interface index" toCallback:[command callbackId] withKeepCallback:false];
-                return;
-            }
-            counter--;
-        }
-        counter = [memberIndex unsignedIntValue];
-        AJ_InterfaceDescription member = *(interface);
-        member +=1;
-        while(counter) {
-            if(!++member) {
-                [self sendErrorMessage:@"invokeMember: invalid member index" toCallback:[command callbackId] withKeepCallback:false];
-                return;
-            }
-            counter--;
-        }
-
-        printf("Invoke Member %s\n", *member);
         uint32_t msgId = AJ_ENCODE_MESSAGE_ID(
                                               [listIndex unsignedIntValue],
                                               [objectIndex unsignedIntValue],
@@ -310,16 +279,23 @@ AJ_BusAttachment _bus;
 
         AJ_Message msg;
 
-        status = AJ_SetProxyObjectPath([self proxyObjects], msgId, [path UTF8String]);
-        if(status != AJ_OK) {
-            printf("AJ_SetProxyObjectPath failed with %s\n", AJ_StatusText(status));
-            goto e_Exit;
+        if(path != nil && [path length] > 0) {
+            status = AJ_SetProxyObjectPath([self proxyObjects], msgId, [path UTF8String]);
+            if(status != AJ_OK) {
+                printf("AJ_SetProxyObjectPath failed with %s\n", AJ_StatusText(status));
+                goto e_Exit;
+            }
+        }
+
+        const char* destinationChars = NULL;
+        if(destination != nil) {
+            destinationChars = [destination UTF8String];
         }
 
         printf("MemberType: %u, MemberSignature: %s, IsSecure %u\n", memberType, memberSignature, isSecure);
         switch(memberType) {
             case AJ_METHOD_MEMBER:
-                status = AJ_MarshalMethodCall(&_bus, &msg, msgId, [destination UTF8String], [sessionId unsignedIntValue], 0, MSG_TIMEOUT);
+                status = AJ_MarshalMethodCall(&_bus, &msg, msgId, destinationChars, [sessionId unsignedIntValue], 0, MSG_TIMEOUT);
                 if(status != AJ_OK) {
                     printf("Failure marshalling method call");
                     goto e_Exit;
@@ -560,54 +536,6 @@ e_Exit:
     return status;
 }
 
--(void)testMarshal:(CDVInvokedUrlCommand*)command {
-    [self.commandDelegate runInBackground:^{
-        NSArray* args = [command arguments];
-        NSArray* objects = [command argumentAtIndex:0];
-        NSNumber* objectAsNumber = [command argumentAtIndex:0];
-
-        if([objectAsNumber isKindOfClass:[NSNumber class]]) {
-            printf("objectAsNumber: 0x%llx\n", [objectAsNumber unsignedLongLongValue]);
-        }
-        int i = 0;
-        for (id arg in args) {
-            printf("%s\n",[[NSString stringWithFormat:@"Arg %d is %@\n", i++, arg] UTF8String]);
-        }
-
-        i = 0;
-
-        unsigned long objectCount = [objects count];
-
-        printf("Object Count: %lu\n", objectCount);
-
-        AJ_Object* objectList = AJ_ObjectsCreate();
-
-        for (NSDictionary* object in objects) {
-            AJ_Object newObject = {0};
-
-            //setup object
-            newObject.flags = [[object objectForKey:@"flags"] unsignedIntValue];
-            newObject.path = [[object objectForKey:@"path"] UTF8String];
-            AJ_InterfaceDescription* interfaces = AJ_InterfacesCreate();
-            for (NSDictionary* interface in [object objectForKey:@"interfaces"]) {
-                printf("Interface %s\n", [[interface objectForKey:@"name"] UTF8String]);
-                char** ifaceMethods = AJ_InterfaceDescriptionCreate([[interface objectForKey:@"name"] UTF8String]);
-                for(NSString* method in [interface objectForKey:@"methods"]) {
-                    printf("Method: %s\n", [method UTF8String]);
-                    ifaceMethods = AJ_InterfaceDescriptionAdd(ifaceMethods, [method UTF8String]);
-                }
-                interfaces = AJ_InterfacesAdd(interfaces, ifaceMethods);
-            }
-            newObject.interfaces = interfaces;
-            objectList = AJ_ObjectsAdd(objectList, newObject);
-
-            printf("%s\n",[[NSString stringWithFormat:@"Inner %d is %@\n", i++, object] UTF8String]);
-        }
-
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:[NSArray arrayWithObject:[NSNumber numberWithUnsignedLongLong:objectList]]] callbackId:[command callbackId]];
-    }];
-}
-
 // Constructor for plugin class
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView {
     self = [super initWithWebView:theWebView];
@@ -657,52 +585,6 @@ dispatch_source_t CreateDispatchTimer(uint64_t interval,
         [self setDispatchSource:aTimer];
     }
 }
-
-//- (void) joinSession:(CDVInvokedUrlCommand*)command {
-//    printf("+joinSession\n");
-//    dispatch_async([self dispatchQueue], ^{
-//        printf("+joinSessionAsyc\n");
-//        AJ_Status status = AJ_OK;
-//        NSNumber* port = [command argumentAtIndex:0];
-//        NSString* serviceName = [command argumentAtIndex:1];
-//        NSString* callbackId = [command callbackId];
-//
-//        status = AJ_BusJoinSession(&_bus, [serviceName UTF8String], [port intValue], NULL);
-//        if(status == AJ_OK) {
-//            NSNumber* methodKey = [NSNumber numberWithInt:AJ_REPLY_ID(AJ_METHOD_JOIN_SESSION)];
-//            MethodReplyHandler adjustVolumeHandler = ^bool(AJ_Message* pMsg) {
-//
-//                AJ_InfoPrintf((" -- Got reply to JoinSession ---\n"));
-//                AJ_InfoPrintf(("MsgType: %d 0x%x\n", (*pMsg).hdr->msgType, (*pMsg).hdr->msgType));
-//                uint32_t replyCode;
-//                uint32_t sessionId;
-//
-//                if ((*pMsg).hdr->msgType == AJ_MSG_ERROR) {
-//                    [self sendErrorMessage:@"Failure joining sessoin MSG ERROR" toCallback:callbackId withKeepCallback:false];
-//                } else {
-//                    AJ_UnmarshalArgs(pMsg, "uu", &replyCode, &sessionId);
-//                    if (replyCode == AJ_JOINSESSION_REPLY_SUCCESS) {
-//                        [self sendProgressMessage:[NSString stringWithFormat:@"JoinSession success SessionId %u Sender: %s", sessionId, [serviceName UTF8String]] toCallback:callbackId withKeepCallback:false];
-//                    } else {
-//                        [self sendErrorMessage:[NSString stringWithFormat:@"Failure joining session replyCode = 0x%x %d", replyCode, replyCode] toCallback:callbackId withKeepCallback:false];
-//                    }
-//                }
-//
-//                [[self methodReplyHandlers] removeObjectForKey:methodKey];
-//                return true;
-//
-//            };
-//
-//            [[self methodReplyHandlers] setObject:adjustVolumeHandler forKey:methodKey];
-//
-//        } else {
-//            [self sendErrorMessage:[NSString stringWithFormat:@"Failed to iniitate join session: %x %d %s", status, status, AJ_StatusText(status)] toCallback:callbackId withKeepCallback:false];
-//        }
-//
-//        printf("-joinSessionAsync\n");
-//    });
-//    printf("-joinSession\n");
-//}
 
 - (void) disconnect:(CDVInvokedUrlCommand*) command {
     AJ_Disconnect(&_bus);
