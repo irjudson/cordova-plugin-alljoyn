@@ -96,6 +96,15 @@ cordova.commandProxy.add("AllJoyn", {
       error(status);
     }
   },
+  leaveSession: function(success, error, parameters) {
+    var sessionId = parameters[0];
+    var status = AllJoynWinRTComponent.AllJoyn.aj_BusLeaveSession(busAttachment, sessionId);
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      success();
+    } else {
+      error();
+    }
+  },
   invokeMember: function(success, error, parameters) {
     var sessionId = parameters[0],
       destination = parameters[1],

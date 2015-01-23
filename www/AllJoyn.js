@@ -61,6 +61,9 @@ var AllJoyn = {
 	        var signature = getSignature(indexList, registeredObjects);
 	        exec(sendSignalSuccess, sendSignalError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, inParameterType, parameters]);
 	      },
+	      leave: function(leaveSuccess, leaveError) {
+	        exec(leaveSuccess, leaveError, "AllJoyn", "leaveSession", [sessionId]);
+	      }
 	    };
 	    success(session);
 	  };
