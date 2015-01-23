@@ -18,7 +18,6 @@ var AllJoyn = {
     var successCallback = function() {
       var bus = {
         addListener: function(indexList, responseType, listener) {
-          var signature = getSignature(indexList, registeredObjects);
           // We are passing the listener function to the exec call as its success callback, but in this case,
           // it is expected that the callback can be called multiple times. The error callback is passed just because
           // exec requires it, but it is not used for anything.
