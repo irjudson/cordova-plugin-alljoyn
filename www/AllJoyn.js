@@ -32,13 +32,13 @@ var AllJoyn = {
     exec(successCallback, error, "AllJoyn", "connect");
 	},
   /*
-   * When name found, success callback is called with parameter { name: "the.name.found" }
+   * When name found, listener is called with parameter { name: "the.name.found" }
    */
-	startFindingAdvertisedName: function(success, error, name) {
-	  exec(success, error, "AllJoyn", "startFindingAdvertisedName", [name]);
+	addAdvertisedNameListener: function(name, listener) {
+	  exec(listener, function() { }, "AllJoyn", "addAdvertisedNameListener", [name, listener]);
 	},
-	startFindingInterfaces: function(success, error, names) {
-	  exec(success, error, "AllJoyn", "startFindingInterfaces", [names]);
+	addInterfacesListener: function(interfaceNames, listener) {
+	  exec(listener, function() { }, "AllJoyn", "addInterfacesListener", [interfaceNames, listener]);
 	},
   /*
         var service = {

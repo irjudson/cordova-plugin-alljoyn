@@ -52,19 +52,17 @@ cordova.commandProxy.add("AllJoyn", {
     AllJoynWinRTComponent.AllJoyn.aj_RegisterObjects(applicationObjects, proxyObjects);
     success();
   },
-  startFindingAdvertisedName: function(success, error, parameters) {
+  addAdvertisedNameListener: function(success, error, parameters) {
     var name = parameters[0];
+    var callback = parameters[1];
 
     var foundAdvertisedNameMessageId = AllJoynWinRTComponent.AllJoyn.aj_Bus_Message_ID(1, 0, 1);
     messageHandler.addHandler(
       foundAdvertisedNameMessageId, 's',
       function(messageObject, messageBody) {
         console.log("Received message: ", messageObject, messageBody);
-        messageHandler.removeHandler(foundAdvertisedNameMessageId, this[1]);
         if (messageBody[0] == AllJoynWinRTComponent.AJ_Status.aj_OK) {
-          success({ name: messageBody[1] });
-        } else {
-          error(messageBody[0])
+          callback({ name: messageBody[1] });
         }
       }
     );
