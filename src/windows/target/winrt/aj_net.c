@@ -38,6 +38,7 @@
 #include "aj_util.h"
 #include "aj_connect.h"
 #include "aj_debug.h"
+#include "aj_target_util.h"
 
 /**
  * Turn on per-module debug printing by setting this variable to non-zero value
@@ -302,8 +303,8 @@ static AJ_Status AJ_Net_Recv(AJ_IOBuffer* buf, uint32_t len, uint32_t timeout)
 /*
  * Statically sized buffers for I/O
  */
-static uint8_t rxData[2048];
-static uint8_t txData[2048];
+static uint8_t rxData[MAX_STR_LENGTH];
+static uint8_t txData[MAX_STR_LENGTH];
 
 AJ_Status AJ_Net_Connect(AJ_NetSocket* netSock, uint16_t port, uint8_t addrType, const uint32_t* addr)
 {
