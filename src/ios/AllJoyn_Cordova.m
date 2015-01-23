@@ -329,36 +329,39 @@ AJ_BusAttachment _bus;
         if(AJ_OK == status) {
             status = AJ_DeliverMsg(&msg);
 
+            if(memberType != AJ_SIGNAL_MEMBER) {
+                NSNumber* methodKey = [NSNumber numberWithInt:AJ_REPLY_ID(msgId)];
+                MethodReplyHandler methodReplyHandler = ^bool(AJ_Message* pMsg) {
+                    AJ_Status status;
 
-            NSNumber* methodKey = [NSNumber numberWithInt:AJ_REPLY_ID(msgId)];
-            MethodReplyHandler methodReplyHandler = ^bool(AJ_Message* pMsg) {
-                AJ_Status status;
+                    NSMutableDictionary* responseDictionary = [NSMutableDictionary new];
+                    NSMutableArray* outValues = [NSMutableArray new];
 
-                NSMutableDictionary* responseDictionary = [NSMutableDictionary new];
-                NSMutableArray* outValues = [NSMutableArray new];
+                    if(outParameterSignature != nil && [outParameterSignature length] > 0) {
+                        status = [self unmarshalArgumentsFor:pMsg withSignature:outParameterSignature toValues:outValues];
+                    }
 
-                if(outParameterSignature != nil && [outParameterSignature length] > 0) {
-                    status = [self unmarshalArgumentsFor:pMsg withSignature:outParameterSignature toValues:outValues];
-                }
+                    [responseDictionary setObject:@"invokeMember success" forKey:@"message"];
+                    [responseDictionary setObject:[NSString stringWithUTF8String:pMsg->sender] forKey:@"sender"];
 
-                [responseDictionary setObject:@"invokeMember success" forKey:@"message"];
-                [responseDictionary setObject:[NSString stringWithUTF8String:pMsg->sender] forKey:@"sender"];
+                    [responseDictionary setObject:outValues forKey:@"outValues"];
+                    [self sendProgressDictionary:responseDictionary toCallback:[command callbackId] withKeepCallback:false];
+                    [[self methodReplyHandlers] removeObjectForKey:methodKey];
+                    return true;
+                };
 
-                [responseDictionary setObject:outValues forKey:@"outValues"];
-                [self sendProgressDictionary:responseDictionary toCallback:[command callbackId] withKeepCallback:false];
-                [[self methodReplyHandlers] removeObjectForKey:methodKey];
-                return true;
-            };
-
-            [[self methodReplyHandlers] setObject:methodReplyHandler forKey:methodKey];
+                [[self methodReplyHandlers] setObject:methodReplyHandler forKey:methodKey];
+            }
 
         }
-
 
     e_Exit:
         if(status != AJ_OK) {
             [self sendErrorMessage:[NSString stringWithFormat:@"InvokeMember failure: %s", AJ_StatusText(status)] toCallback:[command callbackId] withKeepCallback:false];
+        } else if(memberType == AJ_SIGNAL_MEMBER) {
+            [self sendProgressMessage:@"Send Signal success" toCallback:[command callbackId] withKeepCallback:false];
         }
+        
         return;
 
     }];
