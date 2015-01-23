@@ -14,8 +14,9 @@
 	<js-module src="www/AllJoyn.js" name="AllJoyn">
 		<clobbers target="AllJoyn" />
 	</js-module>
-  
-    <hook type="before_plugin_install" src="scripts/afterPluginAdd.js" />
+
+    <hook type="before_plugin_install" src="scripts/beforePluginInstall.js" />
+    <hook type="after_plugin_install" src="scripts/afterPluginInstall.js" />
 
 	<!-- android -->
 	<platform name="android">
