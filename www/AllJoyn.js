@@ -14,8 +14,22 @@ var getSignature = function(indexList, objectsList) {
 }
 
 var AllJoyn = {
-	connect: function(success, error) {
-	  exec(success, error, "AllJoyn", "connect");
+  connect: function(success, error) {
+    var successCallback = function() {
+      var bus = {
+        addListener: function(indexList, responseType, listener) {
+          var signature = getSignature(indexList, registeredObjects);
+          // We are passing the listener function to the exec call as its success callback, but in this case,
+          // it is expected that the callback can be called multiple times. The error callback is passed just because
+          // exec requires it, but it is not used for anything.
+          // The listener is also passed as a parameter, because in the Windows implementation, the success callback
+          // can't be called multiple times.
+          exec(listener, function() { }, "AllJoyn", "addListener", [indexList, responseType, listener]);
+        }
+      };
+      success(bus);
+    }
+    exec(successCallback, error, "AllJoyn", "connect");
 	},
   /*
    * When name found, success callback is called with parameter { name: "the.name.found" }
@@ -46,7 +60,7 @@ var AllJoyn = {
 	      sendSignal: function(sendSignalSuccess, sendSignalError, destination, path, indexList, inParameterType, parameters) {
 	        var signature = getSignature(indexList, registeredObjects);
 	        exec(sendSignalSuccess, sendSignalError, "AllJoyn", "invokeMember", [sessionId, destination, signature, path, indexList, inParameterType, parameters]);
-	      }
+	      },
 	    };
 	    success(session);
 	  };

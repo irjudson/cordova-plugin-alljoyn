@@ -4,6 +4,10 @@ var AJ_BUS_STOP_FINDING = 1;
 
 var busAttachment = new AllJoynWinRTComponent.AJ_BusAttachment();
 
+var getMessageId = function(indexList) {
+  return AllJoynWinRTComponent.AllJoyn.aj_Encode_Message_ID(indexList[0], indexList[1], indexList[2], indexList[3]);
+}
+
 cordova.commandProxy.add("AllJoyn", {
   connect: function(success, error) {
     var daemonName = "";
@@ -104,7 +108,7 @@ cordova.commandProxy.add("AllJoyn", {
 
     var isSignal = (signature.lastIndexOf("!") === 0);
 
-    var messageId = AllJoynWinRTComponent.AllJoyn.aj_Encode_Message_ID(indexList[0], indexList[1], indexList[2], indexList[3]);
+    var messageId = getMessageId(indexList);
     var message = new AllJoynWinRTComponent.AJ_Message();
     // An empty string is used as a destination, because that ends up being converted to null platform string
     // in the Windows Runtime Component.
@@ -151,6 +155,20 @@ cordova.commandProxy.add("AllJoyn", {
     } else {
       error(status);
     }
+  },
+  addListener: function(success, error, parameters) {
+    var indexList = parameters[0],
+      responseType = parameters[1],
+      callback = parameters[2];
+    var messageId = getMessageId(indexList);
+    messageHandler.addHandler(
+      messageId, responseType,
+      function(messageObject, messageBody) {
+        console.log("Received message: ", messageObject, messageBody);
+        var response = messageBody[1];
+        callback(response);
+      }
+    );
   }
 });
 
