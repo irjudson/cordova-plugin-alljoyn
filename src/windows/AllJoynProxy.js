@@ -249,6 +249,8 @@ var messageHandler = (function() {
               var messageBody = AllJoynWinRTComponent.AllJoyn.aj_UnmarshalArgs(aj_message, callbacks[i][0]);
               callbacks[i][1](messageObject, messageBody);
             }
+          } else {
+            AllJoynWinRTComponent.AllJoyn.aj_BusHandleBusMessage(aj_message);
           }
         }
         AllJoynWinRTComponent.AllJoyn.aj_CloseMsg(aj_message);
