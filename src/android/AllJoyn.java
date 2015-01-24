@@ -1,6 +1,6 @@
 package org.allseen.alljoyn;
 
-import alljoyn.alljoyn;
+import alljoyn.*;
 
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -97,6 +97,10 @@ public class AllJoyn extends CordovaPlugin {
 	@Override
 	public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
 
+		if (action.equals("initialize")) {
+        	String serviceName = data.getString(0);
+
+		}
 		if (action.equals("discover")) {
 			Log.i(TAG, "Calling discover");
 			// Status status = mBus.findAdvertisedName("org.alljoyn.BusNode.*");
