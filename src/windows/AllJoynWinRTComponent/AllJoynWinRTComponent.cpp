@@ -9,6 +9,7 @@
 #include "aj_connect.h"
 #include "aj_debug.h"
 #include <ppltasks.h>
+#include "aj_msg_priv.h"
 
 using namespace concurrency;
 
@@ -20,6 +21,70 @@ using namespace Windows::Foundation;
 #define AJ_BUS_ID_FLAG   0x00  /**< Identifies that a message belongs to the set of builtin bus object messages */
 #define AJ_APP_ID_FLAG   0x01  /**< Identifies that a message belongs to the set of objects implemented by the application */
 #define AJ_PRX_ID_FLAG   0x02  /**< Identifies that a message belongs to the set of objects implemented by remote peers */
+
+
+#define AJ_SCALAR    0x10
+#define AJ_CONTAINER 0x20
+#define AJ_STRING    0x40
+#define AJ_VARIANT   0x80
+
+
+/**
+* Characterizes the various argument types
+*/
+static const uint8_t TypeFlags[] = {
+	0x08 | AJ_CONTAINER,  /* AJ_ARG_STRUCT            '('  */
+	0,                    /*                          ')'  */
+	0x04 | AJ_CONTAINER,  /* AJ_ARG_ARRAY             'a'  */
+	0x04 | AJ_SCALAR,     /* AJ_ARG_BOOLEAN           'b'  */
+	0,
+	0x08 | AJ_SCALAR,     /* AJ_ARG_DOUBLE            'd'  */
+	0,
+	0,
+	0x01 | AJ_STRING,     /* AJ_ARG_SIGNATURE         'g'  */
+	0x04 | AJ_SCALAR,     /* AJ_ARG_HANDLE            'h'  */
+	0x04 | AJ_SCALAR,     /* AJ_ARG_INT32             'i'  */
+	0,
+	0,
+	0,
+	0,
+	0x02 | AJ_SCALAR,     /* AJ_ARG_INT16             'n'  */
+	0x04 | AJ_STRING,     /* AJ_ARG_OBJ_PATH          'o'  */
+	0,
+	0x02 | AJ_SCALAR,     /* AJ_ARG_UINT16            'q'  */
+	0,
+	0x04 | AJ_STRING,     /* AJ_ARG_STRING            's'  */
+	0x08 | AJ_SCALAR,     /* AJ_ARG_UINT64            't'  */
+	0x04 | AJ_SCALAR,     /* AJ_ARG_UINT32            'u'  */
+	0x01 | AJ_VARIANT,    /* AJ_ARG_VARIANT           'v'  */
+	0,
+	0x08 | AJ_SCALAR,     /* AJ_ARG_INT64             'x'  */
+	0x01 | AJ_SCALAR,     /* AJ_ARG_BYTE              'y'  */
+	0,
+	0x08 | AJ_CONTAINER,  /* AJ_ARG_DICT_ENTRY        '{'  */
+	0,
+	0                     /*                          '}'  */
+};
+
+
+/**
+* This macro makes sure that the signature contains valid characters
+* in the TypeFlags array. If the index passed is below ascii 'a'
+* or above ascii '}' and not ascii '(' or ')' then the signature is invalid.
+* Below is the macro broken into smaller chunks:
+*
+* ((t) == '(' || (t) == ')') ? (t) - '('       --> If the value is ) or (, get the value in TypeFlags
+* :
+* (((t) < 'a' || (t) > '}') ? '}' + 2 - 'a'    --> The value is too high or too low, return TypeFlags[30] (0)
+* :
+* (t) + 2 - 'a'                                --> The value is valid, get the value in TypeFlags
+*/
+#define TYPE_FLAG(t) TypeFlags[((t) == '(' || (t) == ')') ? (t) - '(' : (((t) < 'a' || (t) > '}') ? '}' + 2 - 'a' : (t) + 2 - 'a') ]
+
+/*
+* For scalar types returns the size of the type
+*/
+#define SizeOfType(typeId) (TYPE_FLAG(typeId) & 0xF)
 
 
 static ::AJ_Object* _s_cachedLocalObjects = NULL;
@@ -353,59 +418,101 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 		void* val = NULL;
 		uint8_t typeId = (uint8_t)_signature[i];
 
-		switch (_signature[i])
+		if (!AJ_IsBasicType(typeId))
 		{
-			/**< AllJoyn 64-bit unsigned integer basic type */
-			case 't':
-				u64 = _wtoi64(args[i]->Data());
-				val = &u64;
-				break;
-
-			/**< AllJoyn 32-bit unsigned integer basic type */
-			case 'u':
-				u32 = _wtoi(args[i]->Data());
-				val = &u32;
-				break;
-
-			/**< AllJoyn 16-bit unsigned integer basic type */
-			case 'q':
-				u16 = _wtoi(args[i]->Data());
-				val = &u16;
-				break;
-
-			/**< AllJoyn 8-bit unsigned integer basic type */
-			case 'y':
-				u8 = _wtoi(args[i]->Data());
-				val = &u8;
-				break;
-
-			/**< AllJoyn UTF-8 NULL terminated string basic type */
-			case 's':
-				PLSTOMBS(args[i], str);
-				val = &str;
-				break;
-		}
-
-		if (val)
-		{
-			arg.typeId = typeId;
-			arg.flags = 0;
-			arg.len = 0;
-			arg.val.v_data = (void*)val;
-			arg.sigPtr = NULL;
-			arg.container = NULL;
-			_status = ::AJ_MarshalArg(&msg->_msg, &arg);
-
-			if (_status != AJ_OK)
+			if (typeId == AJ_ARG_VARIANT) 
 			{
-				AJ_ErrPrintf(("AJ_MarshalArgs(): status=%s\n", AJ_StatusText(_status)));
-				break;
+				PLSTOMBS(args[i], vsig);
+				_status = AJ_MarshalVariant(&msg->_msg, vsig);
+				int sigLen = args[i]->Length();
+
+				Array<String^>^ argsv = ref new Array<String^>(sigLen);
+
+				for (int j = 0; j < sigLen; j++)
+				{
+					argsv[j] = args[i + j + 1];
+				}
+
+				if (_status == AJ_OK) 
+				{
+					_status = static_cast<::AJ_Status>(AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(msg, args[i], argsv));
+				}
+
+				if (_status == AJ_OK)
+				{
+					i += sigLen;
+					continue;
+				}
 			}
+
+			AJ_ErrPrintf(("AJ_MarshalArgs(): AJ_ERR_UNEXPECTED\n"));
+			_status = AJ_ERR_UNEXPECTED;
+			break;
 		}
 		else
 		{
-			_status = ::AJ_Status::AJ_ERR_INVALID;
-			break;
+			if (AJ_IsScalarType(typeId))
+			{
+				if (SizeOfType(typeId) == 8) 
+				{
+					u64 = _wtoi64(args[i]->Data());
+					val = &u64;
+				}
+				else if (SizeOfType(typeId) == 4) 
+				{
+					if (!wcscmp(args[i]->Data(), L"true") || !wcscmp(args[i]->Data(), L"TRUE"))
+					{
+						u32 = 1;
+					}
+					else if (!wcscmp(args[i]->Data(), L"false") || !wcscmp(args[i]->Data(), L"FALSE"))
+					{
+						u32 = 0;
+					}
+					else
+					{
+						u32 = _wtoi(args[i]->Data());
+					}
+
+					val = &u32;
+				}
+				else if (SizeOfType(typeId) == 2) 
+				{
+					u16 = _wtoi(args[i]->Data());
+					val = &u16;
+				}
+				else 
+				{
+					u8 = _wtoi(args[i]->Data());
+					val = &u8;
+				}
+			}
+			else 
+			{
+				PLSTOMBS(args[i], str);
+				val = &str;
+			}
+
+			if (val)
+			{
+				arg.typeId = typeId;
+				arg.flags = 0;
+				arg.len = 0;
+				arg.val.v_data = (void*)val;
+				arg.sigPtr = NULL;
+				arg.container = NULL;
+				_status = ::AJ_MarshalArg(&msg->_msg, &arg);
+
+				if (_status != AJ_OK)
+				{
+					AJ_ErrPrintf(("AJ_MarshalArgs(): status=%s\n", AJ_StatusText(_status)));
+					break;
+				}
+			}
+			else
+			{
+				_status = ::AJ_Status::AJ_ERR_INVALID;
+				break;
+			}
 		}
 	}
 
