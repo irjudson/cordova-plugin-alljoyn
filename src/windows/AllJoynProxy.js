@@ -61,9 +61,7 @@ cordova.commandProxy.add("AllJoyn", {
       foundAdvertisedNameMessageId, 's',
       function(messageObject, messageBody) {
         console.log("Received message: ", messageObject, messageBody);
-        if (messageBody[0] == AllJoynWinRTComponent.AJ_Status.aj_OK) {
-          callback({ name: messageBody[1] });
-        }
+        callback({ name: messageBody[0] });
       }
     );
 
@@ -84,7 +82,7 @@ cordova.commandProxy.add("AllJoyn", {
         joinSessionReplyId, 'uu',
         function(messageObject, messageBody) {
           console.log("Received message: ", messageObject, messageBody);
-          var sessionId = messageBody[2];
+          var sessionId = messageBody[1];
           var sessionHost = messageObject.sender;
           success([sessionId, sessionHost]);
           messageHandler.removeHandler(joinSessionReplyId, this[1]);
@@ -153,8 +151,7 @@ cordova.commandProxy.add("AllJoyn", {
           replyMessageId, responseType,
           function(messageObject, messageBody) {
             console.log("Received message: ", messageObject, messageBody);
-            var response = messageBody[1];
-            success(response);
+            success(messageBody);
             messageHandler.removeHandler(replyMessageId, this[1]);
           }
         );
@@ -172,8 +169,7 @@ cordova.commandProxy.add("AllJoyn", {
       messageId, responseType,
       function(messageObject, messageBody) {
         console.log("Received message: ", messageObject, messageBody);
-        var response = messageBody[1];
-        callback(response);
+        callback(messageBody);
       }
     );
   }
@@ -247,7 +243,16 @@ var messageHandler = (function() {
             for (var i = 0; i < callbacks.length; i++) {
               // Unmarshal the message body
               var messageBody = AllJoynWinRTComponent.AllJoyn.aj_UnmarshalArgs(aj_message, callbacks[i][0]);
-              callbacks[i][1](messageObject, messageBody);
+              // First item in the list is the status of the unmarshaling
+              if (messageBody[0] == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+                // The messageBody is an object array created in the Windows Runtime Component
+                // so turn that to a JavaScript array before returning it.
+                var response = [];
+                for (var j = 1; j < messageBody.length; j++) {
+                  response.push(messageBody[j]);
+                }
+                callbacks[i][1](messageObject, response);
+              }
             }
           } else {
             AllJoynWinRTComponent.AllJoyn.aj_BusHandleBusMessage(aj_message);
