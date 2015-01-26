@@ -673,6 +673,7 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 
 	Array<Object^>^ args = ref new Array<Object^>(signature->Length() + 1);
 	::AJ_Status _status = ::AJ_Status::AJ_ERR_INVALID;
+	int nArgsLen = 1;
 
 	PLSTOMBS(signature, _signature);
 
@@ -680,49 +681,91 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 	{
 		::AJ_Arg arg;
 		uint8_t typeId = (uint8_t)_signature[i];
-		_status = ::AJ_UnmarshalArg(&msg->_msg, &arg);
-		args[i + 1] = nullptr;
+		args[nArgsLen] = nullptr;
 
-		if (_status != AJ_OK)
+		if (!AJ_IsBasicType(typeId))
 		{
+			if (typeId == AJ_ARG_VARIANT)
+			{
+				const char* _vsig;
+				_status = AJ_UnmarshalVariant(&msg->_msg, &_vsig);
+
+				if (_status == AJ_OK)
+				{
+					MBSTOPLS(_vsig, vsig);
+					args[nArgsLen++] = vsig;
+					int sigLen = vsig->Length();
+
+					Array<Object^>^ argsv = AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(msg, vsig);
+					_status = static_cast<::AJ_Status>((AJ_Status)argsv[0]);
+
+					if (_status == AJ_OK)
+					{
+						int newLen = signature->Length() + argsv->Length;
+						Array<Object^>^ newArgs = ref new Array<Object^>(newLen);
+
+						for (int j = 1; j < nArgsLen + argsv->Length - 1; j++)
+						{
+							newArgs[j] = (j < nArgsLen) ? args[j] : argsv[j - nArgsLen + 1];
+						}
+
+						nArgsLen += argsv->Length - 1;
+						args = newArgs;
+					}
+				}
+
+				if (_status == AJ_OK)
+				{
+					continue;
+				}
+			}
+
+			AJ_ErrPrintf(("AJ_MarshalArgs(): AJ_ERR_UNEXPECTED\n"));
+			_status = AJ_ERR_UNEXPECTED;
 			break;
 		}
-
-		switch (_signature[i])
+		else
 		{
-			/**< AllJoyn 64-bit unsigned integer basic type */
-		case 't':
-			args[i + 1] = static_cast<uint64_t>(*arg.val.v_uint64);
-			break;
+			_status = ::AJ_UnmarshalArg(&msg->_msg, &arg);
 
-			/**< AllJoyn 32-bit unsigned integer basic type */
-		case 'u':
-			args[i + 1] = static_cast<uint32_t>(*arg.val.v_uint32);
-			break;
+			if (_status != AJ_OK)
+			{
+				break;
+			}
 
-			/**< AllJoyn 16-bit unsigned integer basic type */
-		case 'q':
-			args[i + 1] = static_cast<uint16_t>(*arg.val.v_uint16);
-			break;
-
-			/**< AllJoyn 8-bit unsigned integer basic type */
-		case 'y':
-			args[i + 1] = static_cast<uint8_t>(*arg.val.v_byte);
-			break;
-
-			/**< AllJoyn UTF-8 NULL terminated string basic type */
-		case 's':
-			MBSTOWCS(arg.val.v_string, v_string);
-			String^ val = ref new String(v_string);
-			args[i + 1] = val;
-			break;
+			if (AJ_IsScalarType(typeId))
+			{
+				if (SizeOfType(typeId) == 8)
+				{
+					args[nArgsLen] = static_cast<uint64_t>(*arg.val.v_byte);
+				}
+				else if (SizeOfType(typeId) == 4)
+				{
+					args[nArgsLen] = static_cast<uint32_t>(*arg.val.v_byte);
+				}
+				else if (SizeOfType(typeId) == 2)
+				{
+					args[nArgsLen] = static_cast<uint16_t>(*arg.val.v_byte);
+				}
+				else
+				{
+					args[nArgsLen] = static_cast<uint8_t>(*arg.val.v_byte);
+				}
+			}
+			else
+			{
+				MBSTOPLS(arg.val.v_string, val);
+				args[nArgsLen] = val;
+			}
 		}
 
-		if (args[i + 1] == nullptr)
+		if (args[nArgsLen] == nullptr)
 		{
 			_status = ::AJ_Status::AJ_ERR_INVALID;
 			break;
 		}
+
+		nArgsLen++;
 	}
 
 	args[0] = static_cast<AJ_Status>(_status);
