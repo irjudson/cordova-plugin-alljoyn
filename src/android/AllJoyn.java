@@ -27,7 +27,8 @@ public class AllJoyn extends CordovaPlugin {
     private static final String DAEMON_AUTH = "ALLJOYN_PIN_KEYX";
     private static final String DAEMON_PWD = "1234"; // 000000 or 1234
 
-	// BusAttachment mBus;
+    // Hard coded bits that need to be dynamic later
+    AJ_Object[] appObjects;
 
 	/**
 	 * Sets the context of the Command. This can then be used to do things like
@@ -39,51 +40,30 @@ public class AllJoyn extends CordovaPlugin {
 	@Override
 	public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
 		super.initialize(cordova, webView);
-		Log.i(TAG, "Initialization running.");
-		
+		Log.i(TAG, "Initialization running.");		
 		alljoyn.AJ_Initialize();
-
-		// Log.i(TAG, "Setting Authentication.");
-		// Status status = PasswordManager.setCredentials(DAEMON_AUTH, DAEMON_PWD);
-  //       if (status == Status.OK) {
-  //       	Log.i(TAG, "AUTH set successfully.");
-  //       } else {
-  //       	Log.i(TAG, "AUTH set failed: " + status.getErrorCode());
-  //       }
-
-		// Log.i(TAG, "Creating BusAttachment.");
-		// mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
-		
-		// Log.i(TAG, "Registering mBusBusListener.");
-		// mBus.registerBusListener(new BusListener() {
-		// 	@Override
-		// 	public void foundAdvertisedName(String name, short transport, String namePrefix) {
-		// 		mBus.enableConcurrentCallbacks();
-		// 		Log.i(TAG, "Service Found: " + name + " " + namePrefix);
-		// 		short contactPort = CONTACT_PORT;
-		// 		SessionOpts sessionOpts = new SessionOpts();
-		// 		Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
-		// 		Status status = mBus.joinSession(name, contactPort, sessionId, sessionOpts, new SessionListener());
-		// 	}
-		// });
-		
-		// Log.i(TAG, "Connecting to mBus.");
-		// status = mBus.connect();
-		// if (status == Status.OK) {
-		// 	Log.i(TAG, "mBus Connect Success.");
-		// } else {
-		// 	Log.i(TAG, "mBus Connect Error: " + status.getErrorCode());
-		// }
-
-		// Log.i(TAG, "Finding Router Daemon.");
-		// status = mBus.findAdvertisedName("org.alljoyn.BusNode");
-		// if (status == Status.OK) {
-		// 	Log.i(TAG, "Find Router Daemon Success.");
-		// } else {
-		// 	Log.i(TAG, "Find Router Daemon Error: " + status.getErrorCode());
-		// }
-
 		Log.i(TAG, "Initialization completed.");
+	}
+
+	/**
+	 * Executes the application level initialization.
+	 * 
+	 * @param serviceName The name of the service to connect to.
+	 * @return AJ_Status string
+	**/
+	private AJ_Status init(String serviceName)
+	{
+		AJ_Status status = AJ_Status.AJ_OK;
+
+		SWIGTYPE_p_p_char interfaceDescription = alljoyn.AJ_InterfaceDescriptionCreate("org.alljoyn.bus.samples.chat");
+		interfaceDescription = alljoyn.AJ_InterfaceDescriptionAdd(interfaceDescription, "!Chat str>s");
+		SWIGTYPE_p_p_p_char chatInterfaces = alljoyn.AJ_InterfacesCreate();
+		chatInterfaces = alljoyn.AJ_InterfacesAdd(chatInterfaces, interfaceDescription);
+		AJ_Object chatObject = alljoyn.AJ_Object();
+		chatObject.setPath("/chatService");
+		chatObject.setInterfaces(chatInterfaces);
+		
+		return status;
 	}
 
 	/**
@@ -99,7 +79,15 @@ public class AllJoyn extends CordovaPlugin {
 
 		if (action.equals("initialize")) {
         	String serviceName = data.getString(0);
-
+			Log.i(TAG, "AllJoyn.Initialize("+serviceName+") called.");
+			AJ_Status status = init(serviceName);
+			if (status == AJ_Status.AJ_OK) {
+				callbackContext.success("Initialized AllJoyn.");
+				return true;
+			} else {
+				callbackContext.error("Error Initializing AllJoyn: " + status.toString());
+				return false;
+			}
 		}
 		if (action.equals("discover")) {
 			Log.i(TAG, "Calling discover");
