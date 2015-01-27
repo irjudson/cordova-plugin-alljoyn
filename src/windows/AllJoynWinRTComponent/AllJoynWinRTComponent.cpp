@@ -427,7 +427,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 		{
 			if ((typeId == AJ_ARG_STRUCT) || (typeId == AJ_ARG_DICT_ENTRY))
 			{
-				_status = AJ_MarshalContainer(&msg->_msg, &container, typeId);
+				_status = ::AJ_MarshalContainer(&msg->_msg, &container, typeId);
 				if (_status != AJ_OK)
 				{
 					break;
@@ -451,7 +451,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 
 					if ((tId == AJ_STRUCT_CLOSE) || (tId == AJ_DICT_ENTRY_CLOSE))
 					{
-						_status = AJ_MarshalCloseContainer(&msg->_msg, &container);
+						_status = ::AJ_MarshalCloseContainer(&msg->_msg, &container);
 
 						if (_status != AJ_OK)
 						{
@@ -754,7 +754,7 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 		{
 			if ((typeId == AJ_ARG_STRUCT) || (typeId == AJ_ARG_DICT_ENTRY)) 
 			{
-				_status = AJ_UnmarshalContainer(&msg->_msg, &container, typeId);
+				_status = ::AJ_UnmarshalContainer(&msg->_msg, &container, typeId);
 				if (_status != AJ_OK)
 				{
 					break;
@@ -773,7 +773,7 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 
 					if ((tId == AJ_STRUCT_CLOSE) || (tId == AJ_DICT_ENTRY_CLOSE))
 					{
-						_status = AJ_UnmarshalCloseContainer(&msg->_msg, &container);
+						_status = ::AJ_UnmarshalCloseContainer(&msg->_msg, &container);
 
 						if (_status != AJ_OK)
 						{
@@ -1040,6 +1040,30 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_SetProxyObje
 	::AJ_Status status = ::AJ_SetProxyObjectPath(_s_cachedProxyObjects, msgId, _objPath);
 
 	return static_cast<AJ_Status>(status);
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalContainer(AJ_Message^ msg, AJ_Arg^ arg, uint8_t typeId)
+{
+	return static_cast<AJ_Status>(::AJ_MarshalContainer(&msg->_msg, &arg->_arg, typeId));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalCloseContainer(AJ_Message^ msg, AJ_Arg^ arg)
+{
+	return static_cast<AJ_Status>(::AJ_MarshalCloseContainer(&msg->_msg, &arg->_arg));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalContainer(AJ_Message^ msg, AJ_Arg^ arg, uint8_t typeId)
+{
+	return static_cast<AJ_Status>(::AJ_UnmarshalContainer(&msg->_msg, &arg->_arg, typeId));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalCloseContainer(AJ_Message^ msg, AJ_Arg^ arg)
+{
+	return static_cast<AJ_Status>(::AJ_UnmarshalCloseContainer(&msg->_msg, &arg->_arg));
 }
 
 
