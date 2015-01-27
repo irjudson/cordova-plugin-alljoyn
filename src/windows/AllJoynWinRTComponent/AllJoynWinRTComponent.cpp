@@ -476,6 +476,17 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 				continue;
 			}
 
+			// Phong TODO
+			//if ((typeId == AJ_ARG_ARRAY) && IsBasicType(**sig)) 
+			//{
+			//	const void* aval = va_arg(argp, const void*);
+			//	size_t len = va_arg(argp, size_t);
+
+			//	AJ_InitArg(&arg, (uint8_t)*((*sig)++), AJ_ARRAY_FLAG, aval, len);
+			//	status = AJ_MarshalArg(msg, &arg);
+			//	continue;
+			//}
+
 			if ((typeId == AJ_STRUCT_CLOSE) || (typeId == AJ_DICT_ENTRY_CLOSE))
 			{
 				break;
@@ -813,6 +824,82 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 				continue;
 			}
 
+			if (typeId == AJ_ARG_ARRAY)
+			{
+				uint8_t nextTypeId = (uint8_t)_signature[i + 1];
+
+				if (AJ_IsBasicType(nextTypeId))
+				{
+					if (AJ_IsScalarType(nextTypeId))
+					{
+						_status = ::AJ_UnmarshalArg(&msg->_msg, &arg);
+
+						if (_status != AJ_OK)
+						{
+							break;
+						}
+
+						if (SizeOfType(typeId) == 8)
+						{
+							Array<uint64_t>^ retArray = ref new Array<uint64_t>(arg.len);
+
+							for (int j = 0; j < arg.len; j++)
+							{
+								uint64_t* ptr = (uint64_t*)(arg.val.v_data);
+								retArray[j] = ptr[j];
+							}
+
+							args[nArgsLen++] = retArray;
+						}
+						else if (SizeOfType(typeId) == 4)
+						{
+							Array<uint32_t>^ retArray = ref new Array<uint32_t>(arg.len);
+
+							for (int j = 0; j < arg.len; j++)
+							{
+								uint32_t* ptr = (uint32_t*)(arg.val.v_data);
+								retArray[j] = ptr[j];
+							}
+
+							args[nArgsLen++] = retArray;
+						}
+						else if (SizeOfType(typeId) == 2)
+						{
+							Array<uint16_t>^ retArray = ref new Array<uint16_t>(arg.len);
+
+							for (int j = 0; j < arg.len; j++)
+							{
+								uint16_t* ptr = (uint16_t*)(arg.val.v_data);
+								retArray[j] = ptr[j];
+							}
+
+							args[nArgsLen++] = retArray;
+						}
+						else
+						{
+							Array<uint8_t>^ retArray = ref new Array<uint8_t>(arg.len);
+
+							for (int j = 0; j < arg.len; j++)
+							{
+								uint8_t* ptr = (uint8_t*)(arg.val.v_data);
+								retArray[j] = ptr[j];
+							}
+
+							args[nArgsLen++] = retArray;
+						}
+
+						args[nArgsLen++] = arg.len;
+						i++;
+					}
+					else
+					{
+						// Phong TODO Handle "as"
+					}
+
+					continue;
+				}
+			}
+
 			if ((typeId == AJ_STRUCT_CLOSE) || (typeId == AJ_DICT_ENTRY_CLOSE)) 
 			{
 				break;
@@ -870,15 +957,15 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 			{
 				if (SizeOfType(typeId) == 8)
 				{
-					args[nArgsLen] = static_cast<uint64_t>(*arg.val.v_byte);
+					args[nArgsLen] = static_cast<uint64_t>(*arg.val.v_uint64);
 				}
 				else if (SizeOfType(typeId) == 4)
 				{
-					args[nArgsLen] = static_cast<uint32_t>(*arg.val.v_byte);
+					args[nArgsLen] = static_cast<uint32_t>(*arg.val.v_uint32);
 				}
 				else if (SizeOfType(typeId) == 2)
 				{
-					args[nArgsLen] = static_cast<uint16_t>(*arg.val.v_byte);
+					args[nArgsLen] = static_cast<uint16_t>(*arg.val.v_uint16);
 				}
 				else
 				{
