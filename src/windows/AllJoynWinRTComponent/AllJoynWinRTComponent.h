@@ -549,7 +549,9 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_BusPropGet(AJ_Message^ msg, AJ_BusPropGetCallback^ callback);
 		static AJ_Status AJ_BusPropSet(AJ_Message^ msg, AJ_BusPropSetCallback^ callback);
 		static AJ_Status AJ_BusBindSessionPort(AJ_BusAttachment^ bus, uint16_t port, AJ_SessionOpts^ opts, uint8_t flags);
+		static AJ_Status AJ_BusUnbindSession(AJ_BusAttachment^ bus, uint16_t port);
 		static AJ_Status AJ_BusRequestName(AJ_BusAttachment^ bus, String^ name, uint32_t flags);
+		static AJ_Status AJ_BusReleaseName(AJ_BusAttachment^ bus, String^ name);
 		static AJ_Status AJ_BusAdvertiseName(AJ_BusAttachment^ bus, String^ name, uint16_t transportMask, uint8_t op, uint8_t flags);
 
 		/////////////////////////////////////////////////////////////////////////

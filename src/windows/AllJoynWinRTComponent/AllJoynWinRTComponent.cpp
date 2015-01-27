@@ -769,10 +769,25 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusBindSessi
 	return (static_cast<AJ_Status>(_status));
 }
 
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusUnbindSession(AJ_BusAttachment^ bus, uint16_t port)
+{
+	::AJ_Status _status = ::AJ_BusUnbindSession(bus->_bus, port);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
 AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusRequestName(AJ_BusAttachment^ bus, String^ name, uint32_t flags)
 {
 	PLSTOMBS(name, _name);
 	::AJ_Status _status = ::AJ_BusRequestName(bus->_bus, _name, flags);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusReleaseName(AJ_BusAttachment^ bus, String^ name)
+{
+	PLSTOMBS(name, _name);
+	::AJ_Status _status = ::AJ_BusReleaseName(bus->_bus, _name);
 
 	return (static_cast<AJ_Status>(_status));
 }

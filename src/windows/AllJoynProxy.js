@@ -121,6 +121,57 @@ cordova.commandProxy.add("AllJoyn", {
       error(status);
     }
   },
+  stopAdvertisingName: function(success, error, parameters) {
+    var wellKnownName = parameters[0];
+    var port = parameters[1];
+
+    var status;
+
+    status = AllJoynWinRTComponent.AllJoyn.aj_BusUnbindSession(busAttachment, port);
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      var unbindReplyId = AllJoynWinRTComponent.AllJoyn.aj_Reply_ID(AllJoynWinRTComponent.AJ_Std.aj_Method_Unbind_Session);
+      messageHandler.addHandler(
+        unbindReplyId, null,
+        function(messageObject, messageBody) {
+          console.log("Got unbindReplyId");
+          messageHandler.removeHandler(unbindReplyId, this[1]);
+          status = AllJoynWinRTComponent.AllJoyn.aj_BusReleaseName(busAttachment, wellKnownName);
+          if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+            var releaseNameReplyId = AllJoynWinRTComponent.AllJoyn.aj_Reply_ID(AllJoynWinRTComponent.AJ_Std.aj_Method_Release_Name);
+            messageHandler.addHandler(
+              releaseNameReplyId, null,
+              function(messageObject, messageBody) {
+                console.log("Got releaseNameReplyId");
+                messageHandler.removeHandler(releaseNameReplyId, this[1]);
+                // 65535 == TRANSPORT_ANY
+                var transportMask = 65535;
+                // 1 == AJ_BUS_STOP_ADVERTISING
+                var op = 1;
+                status = AllJoynWinRTComponent.AllJoyn.aj_BusAdvertiseName(busAttachment, wellKnownName, transportMask, op, 0);
+                if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+                  var cancelAdvertiseNameReplyId = AllJoynWinRTComponent.AllJoyn.aj_Reply_ID(AllJoynWinRTComponent.AJ_Std.aj_Method_Cancel_Advertise);
+                  messageHandler.addHandler(
+                    cancelAdvertiseNameReplyId, null,
+                    function(messageObject, messageBody) {
+                      console.log("Got cancelAdvertiseNameReplyId");
+                      messageHandler.removeHandler(cancelAdvertiseNameReplyId, this[1]);
+                      success();
+                    }
+                  );
+                } else {
+                  error(status);
+                }
+              }
+            );
+          } else {
+            error(status);
+          }
+        }
+      );
+    } else {
+      error(status);
+    }
+  },
   joinSession: function(success, error, parameters) {
     var service = parameters[0];
 
@@ -132,9 +183,14 @@ cordova.commandProxy.add("AllJoyn", {
       messageHandler.addHandler(
         joinSessionReplyId, 'uu',
         function(messageObject, messageBody) {
-          var sessionId = messageBody[1];
-          var sessionHost = messageObject.sender;
-          success([sessionId, sessionHost]);
+          if (messageBody != null) {
+            var sessionId = messageBody[1];
+            var sessionHost = messageObject.sender;
+            success([sessionId, sessionHost]);
+          } else {
+            // TODO: How to get the error code, is it in the message header?
+            error();
+          }
           messageHandler.removeHandler(joinSessionReplyId, this[1]);
         }
       );
@@ -284,7 +340,6 @@ var messageHandler = (function() {
         if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
           var messageObject = aj_message.get();
           var receivedMessageId = messageObject.msgId;
-          console.log('Received message with id: ' + receivedMessageId);
           // Here we accept all incoming session requests
           if (receivedMessageId == AllJoynWinRTComponent.AJ_Std.aj_Method_Accept_Session) {
             AllJoynWinRTComponent.AllJoyn.aj_BusReplyAcceptSession(aj_message, 1);
@@ -314,6 +369,7 @@ var messageHandler = (function() {
               callbacks[i][1](messageObject, response);
             }
           } else {
+            console.log('Message with id ' + receivedMessageId + ' passed to default handler');
             AllJoynWinRTComponent.AllJoyn.aj_BusHandleBusMessage(aj_message);
           }
         }

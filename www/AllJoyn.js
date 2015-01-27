@@ -42,6 +42,9 @@ var AllJoyn = {
 	startAdvertisingName: function(success, error, name, port) {
 	  exec(success, error, "AllJoyn", "startAdvertisingName", [name, port]);
 	},
+	stopAdvertisingName: function(success, error, name, port) {
+	  exec(success, error, "AllJoyn", "stopAdvertisingName", [name, port]);
+	},
   /*
         var service = {
           name: "name.of.the.service",
