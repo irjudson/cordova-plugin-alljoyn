@@ -39,6 +39,9 @@ var AllJoyn = {
 	addInterfacesListener: function(interfaceNames, listener) {
 	  exec(listener, function() { }, "AllJoyn", "addInterfacesListener", [interfaceNames, listener]);
 	},
+	startAdvertisingName: function(success, error, name, port) {
+	  exec(success, error, "AllJoyn", "startAdvertisingName", [name, port]);
+	},
   /*
         var service = {
           name: "name.of.the.service",

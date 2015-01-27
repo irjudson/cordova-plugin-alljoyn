@@ -60,13 +60,64 @@ cordova.commandProxy.add("AllJoyn", {
     messageHandler.addHandler(
       foundAdvertisedNameMessageId, 's',
       function(messageObject, messageBody) {
-        console.log("Received message: ", messageObject, messageBody);
         callback({ name: messageBody[0] });
       }
     );
 
     var status = AllJoynWinRTComponent.AllJoyn.aj_BusFindAdvertisedName(busAttachment, name, AJ_BUS_START_FINDING);
     if (status != AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      error(status);
+    }
+  },
+  startAdvertisingName: function(success, error, parameters) {
+    var wellKnownName = parameters[0];
+    var port = parameters[1];
+
+    var sessionOptions = null;
+    var status;
+
+    status = AllJoynWinRTComponent.AllJoyn.aj_BusBindSessionPort(busAttachment, port, sessionOptions, 0);
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      var bindReplyId = AllJoynWinRTComponent.AllJoyn.aj_Reply_ID(AllJoynWinRTComponent.AJ_Std.aj_Method_Bind_Session_Port);
+      messageHandler.addHandler(
+        bindReplyId, null,
+        function(messageObject, messageBody) {
+          console.log("Got bindReplyId");
+          messageHandler.removeHandler(bindReplyId, this[1]);
+          status = AllJoynWinRTComponent.AllJoyn.aj_BusRequestName(busAttachment, wellKnownName, 0);
+          if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+            var requestNameReplyId = AllJoynWinRTComponent.AllJoyn.aj_Reply_ID(AllJoynWinRTComponent.AJ_Std.aj_Method_Request_Name);
+            messageHandler.addHandler(
+              requestNameReplyId, null,
+              function(messageObject, messageBody) {
+                console.log("Got requestNameReplyId");
+                messageHandler.removeHandler(requestNameReplyId, this[1]);
+                // 65535 == TRANSPORT_ANY
+                var transportMask = 65535;
+                // 0 == AJ_BUS_START_ADVERTISING
+                var op = 0;
+                status = AllJoynWinRTComponent.AllJoyn.aj_BusAdvertiseName(busAttachment, wellKnownName, transportMask, op, 0);
+                if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+                  var advertiseNameReplyId = AllJoynWinRTComponent.AllJoyn.aj_Reply_ID(AllJoynWinRTComponent.AJ_Std.aj_Method_Advertise_Name);
+                  messageHandler.addHandler(
+                    advertiseNameReplyId, null,
+                    function(messageObject, messageBody) {
+                      console.log("Got advertiseNameReplyId");
+                      messageHandler.removeHandler(advertiseNameReplyId, this[1]);
+                      success();
+                    }
+                  );
+                } else {
+                  error(status);
+                }
+              }
+            );
+          } else {
+            error(status);
+          }
+        }
+      );
+    } else {
       error(status);
     }
   },
@@ -81,7 +132,6 @@ cordova.commandProxy.add("AllJoyn", {
       messageHandler.addHandler(
         joinSessionReplyId, 'uu',
         function(messageObject, messageBody) {
-          console.log("Received message: ", messageObject, messageBody);
           var sessionId = messageBody[1];
           var sessionHost = messageObject.sender;
           success([sessionId, sessionHost]);
@@ -150,7 +200,6 @@ cordova.commandProxy.add("AllJoyn", {
         messageHandler.addHandler(
           replyMessageId, responseType,
           function(messageObject, messageBody) {
-            console.log("Received message: ", messageObject, messageBody);
             success(messageBody);
             messageHandler.removeHandler(replyMessageId, this[1]);
           }
@@ -168,7 +217,6 @@ cordova.commandProxy.add("AllJoyn", {
     messageHandler.addHandler(
       messageId, responseType,
       function(messageObject, messageBody) {
-        console.log("Received message: ", messageObject, messageBody);
         callback(messageBody);
       }
     );
@@ -236,23 +284,34 @@ var messageHandler = (function() {
         if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
           var messageObject = aj_message.get();
           var receivedMessageId = messageObject.msgId;
+          console.log('Received message with id: ' + receivedMessageId);
+          // Here we accept all incoming session requests
+          if (receivedMessageId == AllJoynWinRTComponent.AJ_Std.aj_Method_Accept_Session) {
+            AllJoynWinRTComponent.AllJoyn.aj_BusReplyAcceptSession(aj_message, 1);
+          }
           // Check if we have listeners for this message id
           if (messageListeners[receivedMessageId]) {
             // Pass the value to listeners
             var callbacks = messageListeners[receivedMessageId];
             for (var i = 0; i < callbacks.length; i++) {
-              // Unmarshal the message body
-              var messageBody = AllJoynWinRTComponent.AllJoyn.aj_UnmarshalArgs(aj_message, callbacks[i][0]);
-              // First item in the list is the status of the unmarshaling
-              if (messageBody[0] == AllJoynWinRTComponent.AJ_Status.aj_OK) {
-                // The messageBody is an object array created in the Windows Runtime Component
-                // so turn that to a JavaScript array before returning it.
-                var response = [];
-                for (var j = 1; j < messageBody.length; j++) {
-                  response.push(messageBody[j]);
+              var signature = callbacks[i][0];
+              var response = null;
+              if (signature) {
+                // Unmarshal the message body
+                var messageBody = AllJoynWinRTComponent.AllJoyn.aj_UnmarshalArgs(aj_message, signature);
+                // First item in the list is the status of the unmarshaling
+                if (messageBody[0] == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+                  // The messageBody is an object array created in the Windows Runtime Component
+                  // so turn that to a JavaScript array before returning it.
+                  var response = [];
+                  for (var j = 1; j < messageBody.length; j++) {
+                    response.push(messageBody[j]);
+                  }
+                } else {
+                  console.log('Unmarshaling of message with id ' + receivedMessageId + ' failed with status ' + messageBody[0]);
                 }
-                callbacks[i][1](messageObject, response);
               }
+              callbacks[i][1](messageObject, response);
             }
           } else {
             AllJoynWinRTComponent.AllJoyn.aj_BusHandleBusMessage(aj_message);

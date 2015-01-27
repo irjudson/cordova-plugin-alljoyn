@@ -746,6 +746,45 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusPropSet(A
 	return static_cast<::AJ_Status>(status);
 }
 
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusBindSessionPort(AJ_BusAttachment^ bus, uint16_t port, AJ_SessionOpts^ opts, uint8_t flags)
+{
+	::AJ_SessionOpts* _opts = NULL;
+
+	if (opts)
+	{
+		SAFE_DEL(_s_cachedSessionOpts);
+		_opts = new ::AJ_SessionOpts();
+		ZeroMemory(_opts, sizeof(_opts));
+
+		STRUCT_COPY(opts, isMultipoint);
+		STRUCT_COPY(opts, proximity);
+		STRUCT_COPY(opts, traffic);
+		STRUCT_COPY(opts, transports);
+
+		_s_cachedSessionOpts = _opts;
+	}
+
+	::AJ_Status _status = ::AJ_BusBindSessionPort(bus->_bus, port, _opts, flags);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusRequestName(AJ_BusAttachment^ bus, String^ name, uint32_t flags)
+{
+	PLSTOMBS(name, _name);
+	::AJ_Status _status = ::AJ_BusRequestName(bus->_bus, _name, flags);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_BusAdvertiseName(AJ_BusAttachment^ bus, String^ name, uint16_t transportMask, uint8_t op, uint8_t flags)
+{
+	PLSTOMBS(name, _name);
+	::AJ_Status _status = ::AJ_BusAdvertiseName(bus->_bus, _name, transportMask, op, flags);
+
+	return (static_cast<AJ_Status>(_status));
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Helper functions
