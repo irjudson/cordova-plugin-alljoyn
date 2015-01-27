@@ -415,6 +415,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 	for (int i = 0; i < args->Length; i++)
 	{
 		::AJ_Arg arg;
+		::AJ_Arg container;
 		uint8_t u8;
 		uint16_t u16;
 		uint32_t u32;
@@ -424,21 +425,82 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 
 		if (!AJ_IsBasicType(typeId))
 		{
+			if ((typeId == AJ_ARG_STRUCT) || (typeId == AJ_ARG_DICT_ENTRY))
+			{
+				_status = AJ_MarshalContainer(&msg->_msg, &container, typeId);
+				if (_status != AJ_OK)
+				{
+					break;
+				}
+
+				const wchar_t* wcsSig = signature->Data();
+				String^ vsig = ref new String(wcsSig + i + 1);
+				Array<String^>^ argsv = ref new Array<String^>(vsig->Length());
+
+				for (int j = 0; j < vsig->Length(); j++)
+				{
+					argsv[j] = args[i + j + 1];
+				}
+
+				_status = static_cast<::AJ_Status>(AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(msg, vsig, argsv));
+
+				if (_status == AJ_OK)
+				{
+					wcsSig += vsig->Length();
+					uint8_t tId = (uint8_t)wcsSig[i];
+
+					if ((tId == AJ_STRUCT_CLOSE) || (tId == AJ_DICT_ENTRY_CLOSE))
+					{
+						_status = AJ_MarshalCloseContainer(&msg->_msg, &container);
+
+						if (_status != AJ_OK)
+						{
+							break;
+						}
+
+						i += vsig->Length();
+					}
+					else
+					{
+						_status = AJ_ERR_UNMARSHAL;
+						break;
+					}
+
+					continue;
+				}
+				else
+				{
+					break;
+				}
+
+				continue;
+			}
+
+			if ((typeId == AJ_STRUCT_CLOSE) || (typeId == AJ_DICT_ENTRY_CLOSE))
+			{
+				break;
+			}
+
 			if (typeId == AJ_ARG_VARIANT) 
 			{
 				PLSTOMBS(args[i], vsig);
 				_status = AJ_MarshalVariant(&msg->_msg, vsig);
 				int sigLen = args[i]->Length();
 
-				Array<String^>^ argsv = ref new Array<String^>(sigLen);
-
-				for (int j = 0; j < sigLen; j++)
-				{
-					argsv[j] = args[i + j + 1];
-				}
-
 				if (_status == AJ_OK) 
 				{
+					Array<String^>^ argsv = ref new Array<String^>(sigLen);
+
+					for (int j = 0; j < sigLen; j++)
+					{
+						if (i + j + 1 == args->Length)
+						{
+							break;
+						}
+
+						argsv[j] = args[i + j + 1];
+					}
+
 					_status = static_cast<::AJ_Status>(AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(msg, args[i], argsv));
 				}
 
