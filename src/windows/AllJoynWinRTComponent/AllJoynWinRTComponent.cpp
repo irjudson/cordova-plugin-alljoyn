@@ -23,6 +23,10 @@ using namespace Windows::Foundation;
 #define AJ_PRX_ID_FLAG   0x02  /**< Identifies that a message belongs to the set of objects implemented by remote peers */
 
 
+#define AJ_STRUCT_CLOSE          ')'
+#define AJ_DICT_ENTRY_CLOSE      '}'
+
+
 #define AJ_SCALAR    0x10
 #define AJ_CONTAINER 0x20
 #define AJ_STRING    0x40
@@ -680,11 +684,78 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 	for (int i = 0; i < signature->Length(); i++)
 	{
 		::AJ_Arg arg;
+		::AJ_Arg container;
 		uint8_t typeId = (uint8_t)_signature[i];
 		args[nArgsLen] = nullptr;
 
 		if (!AJ_IsBasicType(typeId))
 		{
+			if ((typeId == AJ_ARG_STRUCT) || (typeId == AJ_ARG_DICT_ENTRY)) 
+			{
+				_status = AJ_UnmarshalContainer(&msg->_msg, &container, typeId);
+				if (_status != AJ_OK)
+				{
+					break;
+				}
+
+				const wchar_t* wcsSig = signature->Data();
+				String^ vsig = ref new String(wcsSig + i + 1);
+				Array<Object^>^ argsv = AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(msg, vsig);
+				int nArgsvLen = argsv->Length - 1; // Skip ")" & "}"
+				_status = static_cast<::AJ_Status>((AJ_Status)argsv[0]);
+
+				if (_status == AJ_OK)
+				{
+					wcsSig += nArgsvLen;
+					uint8_t tId = (uint8_t)wcsSig[i];
+
+					if ((tId == AJ_STRUCT_CLOSE) || (tId == AJ_DICT_ENTRY_CLOSE))
+					{
+						_status = AJ_UnmarshalCloseContainer(&msg->_msg, &container);
+
+						if (_status != AJ_OK)
+						{
+							break;
+						}
+
+						for (int j = 1; j < nArgsvLen; j++)
+						{
+							args[nArgsLen++] = argsv[j];
+						}
+
+						// Resize array to remove containers
+						int newLen = args->Length - 2;
+						Array<Object^>^ newArgs = ref new Array<Object^>(newLen);
+
+						for (int j = 0; j < newLen; j++)
+						{
+							newArgs[j] = args[j];
+						}
+
+						args = newArgs;
+						i += nArgsvLen;
+					}
+					else
+					{
+						_status = AJ_ERR_UNMARSHAL;
+						break;
+					}
+
+					continue;
+				}
+				else
+				{
+					break;
+				}
+
+				continue;
+			}
+
+			if ((typeId == AJ_STRUCT_CLOSE) || (typeId == AJ_DICT_ENTRY_CLOSE)) 
+			{
+				break;
+			}
+
 			if (typeId == AJ_ARG_VARIANT)
 			{
 				const char* _vsig;
