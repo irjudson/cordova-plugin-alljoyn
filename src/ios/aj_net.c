@@ -252,8 +252,9 @@ AJ_Status AJ_Net_Recv(AJ_IOBuffer* buf, uint32_t len, uint32_t timeout)
     return status;
 }
 
-static uint8_t rxData[1024];
-static uint8_t txData[1500];
+//TODO: Figure out decent values for this
+static uint8_t rxData[102400];
+static uint8_t txData[150000];
 
 AJ_Status AJ_Net_Connect(AJ_NetSocket* netSock, uint16_t port, uint8_t addrType, const uint32_t* addr)
 {

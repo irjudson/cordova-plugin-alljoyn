@@ -9,9 +9,9 @@ var getSignature = function(indexList, objectsList) {
   var objects = objectsList[indexList[0]];
   var object = objects[indexList[1]];
   var interfaces = object.interfaces;
-  var signature = interfaces[indexList[2]][indexList[3] + 1]
+  var signature = interfaces[indexList[2]][indexList[3] + 1];
   return signature;
-}
+};
 
 var AllJoyn = {
   connect: function(success, error) {
@@ -39,11 +39,11 @@ var AllJoyn = {
 
       var acceptSessionListener = function(joinSessionRequest) {
         bus.acceptSessionListener(joinSessionRequest);
-      }
+      };
       exec(acceptSessionListener, function() { }, "AllJoyn", "setAcceptSessionListener", [acceptSessionListener]);
 
       success(bus);
-    }
+    };
     exec(successCallback, error, "AllJoyn", "connect");
 	},
   /*
