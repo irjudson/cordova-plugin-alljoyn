@@ -13,6 +13,10 @@ var getSignature = function(indexList, objectsList) {
   return signature;
 };
 
+var getSignalRuleString = function(member, interface) {
+    return "type='signal',member='" + member + "',interface='" + interface + "'";
+};
+
 var AllJoyn = {
   connect: function(success, error) {
     var successCallback = function() {
@@ -34,6 +38,14 @@ var AllJoyn = {
         // Usage: bus.acceptSessionListener = myListenerFunction(joinSessionRequest);
         acceptSessionListener: function(joinSessionRequest) {
           joinSessionRequest.response(true);
+        },
+        addSignalRule: function(success, error, member, interface) {
+            var ruleString = getSignalRuleString(member, interface);
+            exec(success, error, "AllJoyn", "setSignalRule", [ruleString, 0]);
+        },
+        removeSignalRule: function(success, error, member, interface) {
+            var ruleString = getSignalRuleString(member, interface);
+            exec(success, error, "AllJoyn", "setSignalRule", [ruleString, 1]);
         }
       };
 

@@ -373,6 +373,29 @@ uint8_t dbgBASIC_CLIENT = 1;
     }];
 }
 
+-(void)setSignalRule:(CDVInvokedUrlCommand*)command {
+    [self.commandDelegate runInBackground:^{
+        NSString* ruleString = [command argumentAtIndex:0];
+        NSNumber* ruleType = [command argumentAtIndex:1];
+
+        if(![ruleString isKindOfClass:[NSString class]] ||
+           ![ruleType isKindOfClass:[NSNumber class]]) {
+            [self sendErrorMessage:@"setSignalRule: Invalid Argument" toCallback:[command callbackId] withKeepCallback:false];
+            return;
+        }
+
+        AJ_Status status = AJ_BusSetSignalRule([self busAttachment], [ruleString UTF8String], [ruleType unsignedCharValue]);
+
+        if(status == AJ_OK) {
+            [self sendProgressMessage:@"setSignalRule: Success" toCallback:[command callbackId] withKeepCallback:false];
+        } else {
+            NSString* errorMessage = [NSString stringWithFormat:@"setSignalRule: Failure %s", AJ_StatusText(status)];
+            [self sendErrorMessage:errorMessage toCallback:[command callbackId] withKeepCallback:false];
+        }
+        return;
+    }];
+}
+
 -(void)joinSession:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
         printf("+joinSessionAsyc\n");
