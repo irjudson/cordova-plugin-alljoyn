@@ -76,18 +76,96 @@ public class AllJoyn extends CordovaPlugin {
 				return false;
 			}
 		}
-		if (action.equals("discover")) {
-			Log.i(TAG, "Calling discover");
-			// Status status = mBus.findAdvertisedName("org.alljoyn.BusNode.*");
-			// if (status == Status.OK) {
-			// 	callbackContext.success("Find Devices Success.");
-			// 	return true;
-			// } else {
-			// 	callbackContext.error("Find Devices Error: " + status.getErrorCode());
-			// 	return false;
-			// }
-			    
+		if (action.equals("registerObjects")) {
+			Log.i(TAG, "AllJoyn.registerObjects");
+
+			AJ_Status status;
+			JSONArray localObjects = data.getJSONArray(0);
+			JSONArray remoteObjects = data.getJSONArray(1);
+			AJ_Object local = null;
+			AJ_Object remote = null;
+
+			Log.i(TAG, "AllJoyn.registerObjects("+localObjects+","+remoteObjects+")");
+
+			alljoyn.AJ_RegisterObjects(local, remote);
+
+			Log.i(TAG, "AllJoyn.registerObjects succeeded.");
+
+			callbackContext.success("Registered objects!");
+			return true;
 		}
+		if (action.equals("joinSession")) {
+			Log.i(TAG, "AllJoyn.joinSession");
+			AJ_Status status = AJ_Status.AJ_OK;
+
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}
+		if (action.equals("leaveSession")) {
+			Log.i(TAG, "AllJoyn.leaveSession");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
+		if (action.equals("invokeMember")) {
+			Log.i(TAG, "AllJoyn.invokeMember");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
+		if (action.equals("addInterfacesListener")) {
+			Log.i(TAG, "AllJoyn.addInterfacesListener");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
+		if (action.equals("addAdvertisedNameListener")) {
+			Log.i(TAG, "AllJoyn.addAdvertisedNameListener");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
+		if (action.equals("addListener")) {
+			Log.i(TAG, "AllJoyn.addListener");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
 		return false;
 	}
 }
