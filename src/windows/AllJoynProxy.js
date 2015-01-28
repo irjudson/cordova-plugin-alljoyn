@@ -6,6 +6,8 @@ var METHOD_ACCEPT_SESSION_ID = AllJoynWinRTComponent.AJ_Std.aj_Method_Accept_Ses
 
 var busAttachment = new AllJoynWinRTComponent.AJ_BusAttachment();
 
+var registeredProxyObjects = null;
+
 var getMessageId = function(indexList) {
   return AllJoynWinRTComponent.AllJoyn.aj_Encode_Message_ID(indexList[0], indexList[1], indexList[2], indexList[3]);
 }
@@ -52,6 +54,7 @@ cordova.commandProxy.add("AllJoyn", {
     var applicationObjects = getAllJoynObjects(parameters[0]);
     var proxyObjects = getAllJoynObjects(parameters[1]);
     AllJoynWinRTComponent.AllJoyn.aj_RegisterObjects(applicationObjects, proxyObjects);
+    registeredProxyObjects = proxyObjects;
     success();
   },
   addAdvertisedNameListener: function(success, error, parameters) {
@@ -263,6 +266,10 @@ cordova.commandProxy.add("AllJoyn", {
     // An empty string is used as a destination, because that ends up being converted to null platform string
     // in the Windows Runtime Component.
     var destination = destination || "";
+
+    if (path) {
+      AllJoynWinRTComponent.AllJoyn.aj_SetProxyObjectPath(registeredProxyObjects, messageId, path);
+    }
 
     var status;
 
