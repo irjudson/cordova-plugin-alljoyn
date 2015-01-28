@@ -336,7 +336,7 @@ namespace AllJoynWinRTComponent
 	public enum class AJ_ArgType
 	{
 		AJ_Arg_Invalid = '\0',				/**< AllJoyn invalid type */
-		AJ_Arg_ARRAY = 'a',					/**< AllJoyn array container type */
+		AJ_Arg_Array = 'a',					/**< AllJoyn array container type */
 		AJ_Arg_Boolean = 'b',				/**< AllJoyn boolean basic type */
 		AJ_Arg_Double = 'd',				/**< AllJoyn IEEE 754 double basic type */
 		AJ_Arg_Signature = 'g',				/**< AllJoyn signature basic type */
@@ -553,6 +553,11 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_BusRequestName(AJ_BusAttachment^ bus, String^ name, uint32_t flags);
 		static AJ_Status AJ_BusReleaseName(AJ_BusAttachment^ bus, String^ name);
 		static AJ_Status AJ_BusAdvertiseName(AJ_BusAttachment^ bus, String^ name, uint16_t transportMask, uint8_t op, uint8_t flags);
+		static AJ_Status AJ_SetProxyObjectPath(const Array<AJ_Object^>^ proxyObjects, uint32_t msgId, String^ objPath);
+		static AJ_Status AJ_MarshalContainer(AJ_Message^ msg, AJ_Arg^ arg, uint8_t typeId);
+		static AJ_Status AJ_MarshalCloseContainer(AJ_Message^ msg, AJ_Arg^ arg);
+		static AJ_Status AJ_UnmarshalContainer(AJ_Message^ msg, AJ_Arg^ arg, uint8_t typeId);
+		static AJ_Status AJ_UnmarshalCloseContainer(AJ_Message^ msg, AJ_Arg^ arg);
 
 		/////////////////////////////////////////////////////////////////////////
 		// Support functions for introspection

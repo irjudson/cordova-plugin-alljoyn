@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 
-#define MAX_STR_LENGTH WCHAR_MAX >> 2
+#define MAX_STR_LENGTH WCHAR_MAX
 
 
 #if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
@@ -79,6 +79,19 @@
 		int strLen = MultiByteToWideChar(CP_UTF8, 0, mbs, strlen(mbs), wcs, 0);							\
 		MultiByteToWideChar(CP_UTF8, 0, mbs, strlen(mbs), wcs, MAX_STR_LENGTH);							\
 		wcs[strLen] = '\0';																				\
+	}																									\
+	while (0);	
+
+
+#define MBSTOPLS(mbs, wcs)																				\
+	String^ wcs;																						\
+	do																									\
+	{																									\
+		wchar_t __ ## wcs[MAX_STR_LENGTH];																\
+		int strLen = MultiByteToWideChar(CP_UTF8, 0, mbs, strlen(mbs), __ ## wcs, 0);					\
+		MultiByteToWideChar(CP_UTF8, 0, mbs, strlen(mbs), __ ## wcs, MAX_STR_LENGTH);					\
+		__ ## wcs[strLen] = '\0';																		\
+		wcs = ref new String(__ ## wcs);																\
 	}																									\
 	while (0);	
 
