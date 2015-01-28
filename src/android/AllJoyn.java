@@ -26,9 +26,7 @@ public class AllJoyn extends CordovaPlugin {
 	private static final short  CONTACT_PORT=42;
     private static final String DAEMON_AUTH = "ALLJOYN_PIN_KEYX";
     private static final String DAEMON_PWD = "1234"; // 000000 or 1234
-
-    // Hard coded bits that need to be dynamic later
-    AJ_Object[] appObjects;
+    private AJ_BusAttachment bus;
 
 	/**
 	 * Sets the context of the Command. This can then be used to do things like
@@ -42,28 +40,8 @@ public class AllJoyn extends CordovaPlugin {
 		super.initialize(cordova, webView);
 		Log.i(TAG, "Initialization running.");		
 		alljoyn.AJ_Initialize();
+		bus = new AJ_BusAttachment();
 		Log.i(TAG, "Initialization completed.");
-	}
-
-	/**
-	 * Executes the application level initialization.
-	 * 
-	 * @param serviceName The name of the service to connect to.
-	 * @return AJ_Status string
-	**/
-	private AJ_Status init(String serviceName)
-	{
-		AJ_Status status = AJ_Status.AJ_OK;
-
-		SWIGTYPE_p_p_char interfaceDescription = alljoyn.AJ_InterfaceDescriptionCreate("org.alljoyn.bus.samples.chat");
-		interfaceDescription = alljoyn.AJ_InterfaceDescriptionAdd(interfaceDescription, "!Chat str>s");
-		SWIGTYPE_p_p_p_char chatInterfaces = alljoyn.AJ_InterfacesCreate();
-		chatInterfaces = alljoyn.AJ_InterfacesAdd(chatInterfaces, interfaceDescription);
-		AJ_Object chatObject = alljoyn.AJ_Object();
-		chatObject.setPath("/chatService");
-		chatObject.setInterfaces(chatInterfaces);
-		
-		return status;
 	}
 
 	/**
@@ -76,16 +54,25 @@ public class AllJoyn extends CordovaPlugin {
 	 */    
 	@Override
 	public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
-
-		if (action.equals("initialize")) {
-        	String serviceName = data.getString(0);
-			Log.i(TAG, "AllJoyn.Initialize("+serviceName+") called.");
-			AJ_Status status = init(serviceName);
-			if (status == AJ_Status.AJ_OK) {
-				callbackContext.success("Initialized AllJoyn.");
+		if (action.equals("connect")) {
+			String serviceName = data.getString(0);
+			if (serviceName.length() == 0) {
+				serviceName = null;
+			}
+			long timeout = data.getLong(1);
+			AJ_Status status = null;
+			Log.i(TAG, "AllJoyn.connect("+bus+","+serviceName+","+timeout+")");
+			try {
+				status = alljoyn.AJ_FindBusAndConnect(bus, serviceName, timeout);					
+			} catch (Exception e) {
+				Log.i(TAG, "Exception finding and connecting to bus: " + e.toString());
+			}
+			Log.i(TAG, "Called AJ_FindBusAndConnect, status = " + status);
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Connected to router!");
 				return true;
 			} else {
-				callbackContext.error("Error Initializing AllJoyn: " + status.toString());
+				callbackContext.error("Error connecting to router: " + status.toString());
 				return false;
 			}
 		}

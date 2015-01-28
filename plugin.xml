@@ -11,11 +11,12 @@
 		<engine name="cordova" version=">=3.1.0" />
 	</engines>
 
-	<js-module src="www/alljoyn.js" name="allJoyn">
-		<merges target="allseen.alljoyn" />
+	<js-module src="www/AllJoyn.js" name="AllJoyn">
+		<clobbers target="AllJoyn" />
 	</js-module>
-  
-    <hook type="before_plugin_install" src="scripts/afterPluginAdd.js" />
+
+    <hook type="before_plugin_install" src="scripts/beforePluginInstall.js" />
+    <hook type="after_plugin_install" src="scripts/afterPluginInstall.js" />
 
 	<!-- android -->
 	<platform name="android">
@@ -25,6 +26,13 @@
 				<param name="onload" value="true"/>
 			</feature>
 		</config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+        </config-file>
 
 		<!-- Generated Code -->
 		<source-file src="src/android/alljoyn/AJ_BusAttachment.java" target-dir="src/alljoyn" />
@@ -175,7 +183,7 @@
 	<!-- windows -->
 	<platform name="windows">
 		<js-module src="src/windows/AllJoynProxy.js" name="AllJoynProxy">
-			<clobbers target="AllJoyn" />
+			<merges target="" />
 		</js-module>
 		<framework src="src/windows/AllJoynWinRTComponent/AllJoynWinRTComponent.Windows.vcxproj" custom="true" type="projectReference" device="windows" />
 		<framework src="src/windows/AllJoynWinRTComponent/AllJoynWinRTComponent.WindowsPhone.vcxproj" custom="true" type="projectReference" device="phone" />
