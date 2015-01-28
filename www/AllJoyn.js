@@ -24,8 +24,24 @@ var AllJoyn = {
           // The listener is also passed as a parameter, because in the Windows implementation, the success callback
           // can't be called multiple times.
           exec(listener, function() { }, "AllJoyn", "addListener", [indexList, responseType, listener]);
+        },
+        // joinSessionRequest = {
+        //   port: 12,
+        //   sender: "afa-f",
+        //   sessionId: 123,
+        //   response: function // to be called with either true or false
+        // }
+        // Usage: bus.acceptSessionListener = myListenerFunction(joinSessionRequest);
+        acceptSessionListener: function(joinSessionRequest) {
+          joinSessionRequest.response(true);
         }
       };
+
+      var acceptSessionListener = function(joinSessionRequest) {
+        bus.acceptSessionListener(joinSessionRequest);
+      }
+      exec(acceptSessionListener, function() { }, "AllJoyn", "setAcceptSessionListener", [acceptSessionListener]);
+
       success(bus);
     }
     exec(successCallback, error, "AllJoyn", "connect");
