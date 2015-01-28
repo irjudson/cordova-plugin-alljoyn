@@ -56,6 +56,12 @@ cordova.commandProxy.add("AllJoyn", {
     var name = parameters[0];
     var callback = parameters[1];
 
+    var status = AllJoynWinRTComponent.AllJoyn.aj_BusFindAdvertisedName(busAttachment, name, AJ_BUS_START_FINDING);
+    if (status != AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      error(status);
+      return;
+    }
+
     var foundAdvertisedNameMessageId = AllJoynWinRTComponent.AllJoyn.aj_Bus_Message_ID(1, 0, 1);
     messageHandler.addHandler(
       foundAdvertisedNameMessageId, 's',
@@ -63,11 +69,42 @@ cordova.commandProxy.add("AllJoyn", {
         callback({ name: messageBody[0] });
       }
     );
+  },
+  addInterfacesListener: function(success, error, parameters) {
+    var interfaceNames = parameters[0];
+    var callback = parameters[1];
 
-    var status = AllJoynWinRTComponent.AllJoyn.aj_BusFindAdvertisedName(busAttachment, name, AJ_BUS_START_FINDING);
+    var ruleString = "interface='org.alljoyn.About',sessionless='t'";
+    var implementsString = ",implements='";
+    for (var i = 0; i < interfaceNames.length; i++) {
+      var interfaceName = interfaceNames[i];
+      ruleString += implementsString;
+      if (interfaceName.indexOf("$") === 0) {
+        ruleString += interfaceName.substring(1);
+      } else {
+        ruleString += interfaceName;
+      }
+      ruleString += "'";
+    }
+
+    // AJ_BUS_SIGNAL_ALLOW == 0
+    var status = AllJoynWinRTComponent.AllJoyn.aj_BusSetSignalRule(busAttachment, ruleString, 0);
     if (status != AllJoynWinRTComponent.AJ_Status.aj_OK) {
       error(status);
+      return;
     }
+
+    var aboutAnnounceId = AllJoynWinRTComponent.AJ_Std.aj_Signal_About_Announce;
+    messageHandler.addHandler(
+      aboutAnnounceId, 'qq',
+      function(messageObject, messageBody) {
+        callback({
+          version: messageBody[0],
+          port: messageBody[1],
+          name: messageObject.sender
+        });
+      }
+    );
   },
   startAdvertisingName: function(success, error, parameters) {
     var wellKnownName = parameters[0];
