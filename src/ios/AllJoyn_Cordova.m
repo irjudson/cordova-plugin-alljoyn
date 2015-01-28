@@ -593,7 +593,6 @@ uint8_t dbgBASIC_CLIENT = 1;
                 NSNumber* methodKey = [NSNumber numberWithUnsignedInt:AJ_REPLY_ID(msgId)];
                 MsgHandler MsgHandler = ^bool(AJ_Message* pMsg) {
                     AJ_Status status = AJ_OK;
-                    NSMutableDictionary* responseDictionary = [NSMutableDictionary new];
                     NSMutableArray* outValues = [NSMutableArray new];
 
                     if(!pMsg || !(pMsg->hdr) || pMsg->hdr->msgType == AJ_MSG_ERROR) {
@@ -612,12 +611,7 @@ uint8_t dbgBASIC_CLIENT = 1;
                         return true;
                     }
 
-                    [responseDictionary setObject:@"invokeMember success" forKey:@"message"];
-                    [responseDictionary setObject:[NSString stringWithUTF8String:pMsg->sender] forKey:@"sender"];
-
-                    [responseDictionary setObject:outValues forKey:@"outValues"];
-                    [self sendProgressDictionary:responseDictionary toCallback:[command callbackId] withKeepCallback:false];
-
+                    [self sendProgressArray:outValues toCallback:[command callbackId] withKeepCallback:false];
 
                     [[self MessageHandlers] removeObjectForKey:methodKey];
                     return true;
@@ -625,7 +619,6 @@ uint8_t dbgBASIC_CLIENT = 1;
 
                 [[self MessageHandlers] setObject:MsgHandler forKey:methodKey];
             }
-
         }
 
     e_Exit:
