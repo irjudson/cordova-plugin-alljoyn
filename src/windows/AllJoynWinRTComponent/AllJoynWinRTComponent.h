@@ -526,6 +526,7 @@ namespace AllJoynWinRTComponent
 		static void AJ_ReleaseObjects();
 		static AJ_Status AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout);
 		static AJ_Status AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args);
+		static AJ_Status AJ_MarshalArg(AJ_Message^ msg, String^ signature, String^ args);
 		static AJ_Status AJ_DeliverMsg(AJ_Message^ msg);
 		static AJ_Status AJ_CloseMsg(AJ_Message^ msg);
 		static IAsyncOperation<AJ_Status>^ AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout);

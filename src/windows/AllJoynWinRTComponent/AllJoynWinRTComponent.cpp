@@ -439,7 +439,7 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 
 				for (int j = 0; j < vsig->Length(); j++)
 				{
-					argsv[j] = args[i + j + 1];
+					argsv[j] = args[i + j];
 				}
 
 				_status = static_cast<::AJ_Status>(AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(msg, vsig, argsv));
@@ -591,6 +591,85 @@ AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArgs(
 				break;
 			}
 		}
+	}
+
+	return (static_cast<AJ_Status>(_status));
+}
+
+
+AllJoynWinRTComponent::AJ_Status AllJoynWinRTComponent::AllJoyn::AJ_MarshalArg(AJ_Message^ msg, String^ signature, String^ arg)
+{
+	::AJ_Status _status = ::AJ_Status::AJ_ERR_INVALID;
+
+	PLSTOMBS(signature, _signature);
+
+	uint8_t u8;
+	uint16_t u16;
+	uint32_t u32;
+	uint64_t u64;
+	void* val = NULL;
+	uint8_t typeId = (uint8_t)_signature[0];
+
+	if (AJ_IsScalarType(typeId))
+	{
+		if (SizeOfType(typeId) == 8)
+		{
+			u64 = _wtoi64(arg->Data());
+			val = &u64;
+		}
+		else if (SizeOfType(typeId) == 4)
+		{
+			if (!wcscmp(arg->Data(), L"true") || !wcscmp(arg->Data(), L"TRUE"))
+			{
+				u32 = 1;
+			}
+			else if (!wcscmp(arg->Data(), L"false") || !wcscmp(arg->Data(), L"FALSE"))
+			{
+				u32 = 0;
+			}
+			else
+			{
+				u32 = _wtoi(arg->Data());
+			}
+
+			val = &u32;
+		}
+		else if (SizeOfType(typeId) == 2)
+		{
+			u16 = _wtoi(arg->Data());
+			val = &u16;
+		}
+		else
+		{
+			u8 = _wtoi(arg->Data());
+			val = &u8;
+		}
+	}
+	else
+	{
+		PLSTOMBS(arg, str);
+		val = &str;
+	}
+
+	if (val)
+	{
+		::AJ_Arg _arg;
+		_arg.typeId = typeId;
+		_arg.flags = 0;
+		_arg.len = 0;
+		_arg.val.v_data = (void*)val;
+		_arg.sigPtr = NULL;
+		_arg.container = NULL;
+		_status = ::AJ_MarshalArg(&msg->_msg, &_arg);
+
+		if (_status != AJ_OK)
+		{
+			AJ_ErrPrintf(("AJ_MarshalArgs(): status=%s\n", AJ_StatusText(_status)));
+		}
+	}
+	else
+	{
+		_status = ::AJ_Status::AJ_ERR_INVALID;
 	}
 
 	return (static_cast<AJ_Status>(_status));
@@ -830,72 +909,64 @@ Array<Object^>^ AllJoynWinRTComponent::AllJoyn::AJ_UnmarshalArgs(AJ_Message^ msg
 
 				if (AJ_IsBasicType(nextTypeId))
 				{
-					if (AJ_IsScalarType(nextTypeId))
+					_status = ::AJ_UnmarshalArg(&msg->_msg, &arg);
+
+					if (_status != AJ_OK)
 					{
-						_status = ::AJ_UnmarshalArg(&msg->_msg, &arg);
+						break;
+					}
 
-						if (_status != AJ_OK)
+					if (SizeOfType(typeId) == 8)
+					{
+						Array<uint64_t>^ retArray = ref new Array<uint64_t>(arg.len);
+						uint64_t* ptr = (uint64_t*)(arg.val.v_data);
+
+						for (int j = 0; j < arg.len; j++)
 						{
-							break;
+							retArray[j] = ptr[j];
 						}
 
-						if (SizeOfType(typeId) == 8)
+						args[nArgsLen++] = retArray;
+					}
+					else if (SizeOfType(typeId) == 4)
+					{
+						Array<uint32_t>^ retArray = ref new Array<uint32_t>(arg.len);
+						uint32_t* ptr = (uint32_t*)(arg.val.v_data);
+
+						for (int j = 0; j < arg.len; j++)
 						{
-							Array<uint64_t>^ retArray = ref new Array<uint64_t>(arg.len);
-
-							for (int j = 0; j < arg.len; j++)
-							{
-								uint64_t* ptr = (uint64_t*)(arg.val.v_data);
-								retArray[j] = ptr[j];
-							}
-
-							args[nArgsLen++] = retArray;
-						}
-						else if (SizeOfType(typeId) == 4)
-						{
-							Array<uint32_t>^ retArray = ref new Array<uint32_t>(arg.len);
-
-							for (int j = 0; j < arg.len; j++)
-							{
-								uint32_t* ptr = (uint32_t*)(arg.val.v_data);
-								retArray[j] = ptr[j];
-							}
-
-							args[nArgsLen++] = retArray;
-						}
-						else if (SizeOfType(typeId) == 2)
-						{
-							Array<uint16_t>^ retArray = ref new Array<uint16_t>(arg.len);
-
-							for (int j = 0; j < arg.len; j++)
-							{
-								uint16_t* ptr = (uint16_t*)(arg.val.v_data);
-								retArray[j] = ptr[j];
-							}
-
-							args[nArgsLen++] = retArray;
-						}
-						else
-						{
-							Array<uint8_t>^ retArray = ref new Array<uint8_t>(arg.len);
-
-							for (int j = 0; j < arg.len; j++)
-							{
-								uint8_t* ptr = (uint8_t*)(arg.val.v_data);
-								retArray[j] = ptr[j];
-							}
-
-							args[nArgsLen++] = retArray;
+							retArray[j] = ptr[j];
 						}
 
-						args[nArgsLen++] = arg.len;
-						i++;
+						args[nArgsLen++] = retArray;
+					}
+					else if (SizeOfType(typeId) == 2)
+					{
+						Array<uint16_t>^ retArray = ref new Array<uint16_t>(arg.len);
+						uint16_t* ptr = (uint16_t*)(arg.val.v_data);
+
+						for (int j = 0; j < arg.len; j++)
+						{
+							retArray[j] = ptr[j];
+						}
+
+						args[nArgsLen++] = retArray;
 					}
 					else
 					{
-						// Phong TODO Handle "as"
+						Array<uint8_t>^ retArray = ref new Array<uint8_t>(arg.len);
+						uint8_t* ptr = (uint8_t*)(arg.val.v_data);
+
+						for (int j = 0; j < arg.len; j++)
+						{
+							retArray[j] = ptr[j];
+						}
+
+						args[nArgsLen++] = retArray;
 					}
 
+					args[nArgsLen++] = arg.len;
+					i++;
 					continue;
 				}
 			}
