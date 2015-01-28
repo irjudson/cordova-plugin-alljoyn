@@ -1,14 +1,6 @@
 package org.allseen.alljoyn;
 
-import org.alljoyn.bus.BusAttachment;
-import org.alljoyn.bus.BusException;
-import org.alljoyn.bus.BusListener;
-import org.alljoyn.bus.Mutable;
-import org.alljoyn.bus.ProxyBusObject;
-import org.alljoyn.bus.SessionListener;
-import org.alljoyn.bus.SessionOpts;
-import org.alljoyn.bus.Status;
-import org.alljoyn.bus.PasswordManager;
+import alljoyn.*;
 
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -25,17 +17,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 public class AllJoyn extends CordovaPlugin {
-	/* Load the native alljoyn_java library. */
+	/* Load the native alljoyn library. */
 	static {
-		System.loadLibrary("alljoyn_java");
+		System.loadLibrary("alljoyn");
 	}
 
 	private static final String TAG = "AllJoyn";
-	private static final short CONTACT_PORT=42;
+	private static final short  CONTACT_PORT=42;
     private static final String DAEMON_AUTH = "ALLJOYN_PIN_KEYX";
     private static final String DAEMON_PWD = "1234"; // 000000 or 1234
-
-	BusAttachment mBus;
+    private AJ_BusAttachment bus;
 
 	/**
 	 * Sets the context of the Command. This can then be used to do things like
@@ -47,48 +38,9 @@ public class AllJoyn extends CordovaPlugin {
 	@Override
 	public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
 		super.initialize(cordova, webView);
-		Log.i(TAG, "Initialization running.");
-		
-		Log.i(TAG, "Setting Authentication.");
-		Status status = PasswordManager.setCredentials(DAEMON_AUTH, DAEMON_PWD);
-        if (status == Status.OK) {
-        	Log.i(TAG, "AUTH set successfully.");
-        } else {
-        	Log.i(TAG, "AUTH set failed: " + status.getErrorCode());
-        }
-
-		Log.i(TAG, "Creating BusAttachment.");
-		mBus = new BusAttachment(getClass().getName(), BusAttachment.RemoteMessage.Receive);
-		
-		Log.i(TAG, "Registering mBusBusListener.");
-		mBus.registerBusListener(new BusListener() {
-			@Override
-			public void foundAdvertisedName(String name, short transport, String namePrefix) {
-				mBus.enableConcurrentCallbacks();
-				Log.i(TAG, "Service Found: " + name + " " + namePrefix);
-				short contactPort = CONTACT_PORT;
-				SessionOpts sessionOpts = new SessionOpts();
-				Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
-				Status status = mBus.joinSession(name, contactPort, sessionId, sessionOpts, new SessionListener());
-			}
-		});
-		
-		Log.i(TAG, "Connecting to mBus.");
-		status = mBus.connect();
-		if (status == Status.OK) {
-			Log.i(TAG, "mBus Connect Success.");
-		} else {
-			Log.i(TAG, "mBus Connect Error: " + status.getErrorCode());
-		}
-
-		Log.i(TAG, "Finding Router Daemon.");
-		status = mBus.findAdvertisedName("org.alljoyn.BusNode");
-		if (status == Status.OK) {
-			Log.i(TAG, "Find Router Daemon Success.");
-		} else {
-			Log.i(TAG, "Find Router Daemon Error: " + status.getErrorCode());
-		}
-
+		Log.i(TAG, "Initialization running.");		
+		alljoyn.AJ_Initialize();
+		bus = new AJ_BusAttachment();
 		Log.i(TAG, "Initialization completed.");
 	}
 
@@ -102,19 +54,118 @@ public class AllJoyn extends CordovaPlugin {
 	 */    
 	@Override
 	public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
-
-		if (action.equals("discover")) {
-			Log.i(TAG, "Calling discover");
-			Status status = mBus.findAdvertisedName("org.alljoyn.BusNode.*");
-			if (status == Status.OK) {
-				callbackContext.success("Find Devices Success.");
+		if (action.equals("connect")) {
+			String serviceName = data.getString(0);
+			if (serviceName.length() == 0) {
+				serviceName = null;
+			}
+			long timeout = data.getLong(1);
+			AJ_Status status = null;
+			Log.i(TAG, "AllJoyn.connect("+bus+","+serviceName+","+timeout+")");
+			try {
+				status = alljoyn.AJ_FindBusAndConnect(bus, serviceName, timeout);					
+			} catch (Exception e) {
+				Log.i(TAG, "Exception finding and connecting to bus: " + e.toString());
+			}
+			Log.i(TAG, "Called AJ_FindBusAndConnect, status = " + status);
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Connected to router!");
 				return true;
 			} else {
-				callbackContext.error("Find Devices Error: " + status.getErrorCode());
+				callbackContext.error("Error connecting to router: " + status.toString());
 				return false;
 			}
-			    
 		}
+		if (action.equals("registerObjects")) {
+			Log.i(TAG, "AllJoyn.registerObjects");
+
+			AJ_Status status;
+			JSONArray localObjects = data.getJSONArray(0);
+			JSONArray remoteObjects = data.getJSONArray(1);
+			AJ_Object local = null;
+			AJ_Object remote = null;
+
+			Log.i(TAG, "AllJoyn.registerObjects("+localObjects+","+remoteObjects+")");
+
+			alljoyn.AJ_RegisterObjects(local, remote);
+
+			Log.i(TAG, "AllJoyn.registerObjects succeeded.");
+
+			callbackContext.success("Registered objects!");
+			return true;
+		}
+		if (action.equals("joinSession")) {
+			Log.i(TAG, "AllJoyn.joinSession");
+			AJ_Status status = AJ_Status.AJ_OK;
+
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}
+		if (action.equals("leaveSession")) {
+			Log.i(TAG, "AllJoyn.leaveSession");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
+		if (action.equals("invokeMember")) {
+			Log.i(TAG, "AllJoyn.invokeMember");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
+		if (action.equals("addInterfacesListener")) {
+			Log.i(TAG, "AllJoyn.addInterfacesListener");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
+		if (action.equals("addAdvertisedNameListener")) {
+			Log.i(TAG, "AllJoyn.addAdvertisedNameListener");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
+		if (action.equals("addListener")) {
+			Log.i(TAG, "AllJoyn.addListener");
+			AJ_Status status = AJ_Status.AJ_OK;
+			
+			if( status == AJ_Status.AJ_OK) {
+				callbackContext.success("Yay!");
+				return true;
+			} else {
+				callbackContext.error("Error: " + status.toString());
+				return false;
+			}
+		}		
 		return false;
 	}
 }
