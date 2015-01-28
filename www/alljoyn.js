@@ -28,7 +28,7 @@ var AllJoyn = {
       };
       success(bus);
     }
-    exec(successCallback, error, "AllJoyn", "connect", ["", 5000]);
+    exec(successCallback, error, "AllJoyn", "connect");
 	},
   /*
    * When name found, listener is called with parameter { name: "the.name.found" }
