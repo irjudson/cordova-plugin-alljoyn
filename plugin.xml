@@ -16,7 +16,7 @@
 	</js-module>
 
     <hook type="before_plugin_install" src="scripts/beforePluginInstall.js" />
-    <hook type="after_plugin_install" src="scripts/afterPluginInstall.js" />
+      <!-- <hook type="after_plugin_add" src="scripts/afterPluginInstall.js" /> -->
 
 	<!-- android -->
 	<platform name="android">
