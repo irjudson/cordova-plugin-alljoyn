@@ -254,6 +254,80 @@ uint8_t dbgBASIC_CLIENT = 1;
     }];
 }
 
+-(void)stopAdvertisingName:(CDVInvokedUrlCommand*)command {
+    [self.commandDelegate runInBackground:^{
+        NSString* wellKnownName = [command argumentAtIndex:0 withDefault:nil andClass:[NSString class]];
+        NSNumber* port = [command argumentAtIndex:1 withDefault:nil andClass:[NSNumber class]];
+
+        AJ_Status status = AJ_BusUnbindSession([self busAttachment], [port unsignedShortValue]);
+
+        if(status == AJ_OK) {
+            uint32_t unbindSessionReplyId = AJ_REPLY_ID(AJ_METHOD_UNBIND_SESSION);
+            NSNumber* unbindSessionReplyKey = [NSNumber numberWithUnsignedInt:unbindSessionReplyId];
+            MsgHandler unbindSessionReplyHandler = ^bool(AJ_Message* pMsg){
+
+                [[self MessageHandlers]removeObjectForKey:unbindSessionReplyKey];
+
+                if(!pMsg || !pMsg->hdr || pMsg->hdr->msgType == AJ_MSG_ERROR) {
+                    [self sendErrorStatus:AJ_ERR_FAILURE toCallback:[command callbackId] withKeepCallback:false];
+                } else {
+                    AJ_Status status = AJ_BusReleaseName([self busAttachment], [wellKnownName UTF8String]);
+                    if(status == AJ_OK) {
+                        uint32_t releaseNameReplyId = AJ_REPLY_ID(AJ_METHOD_RELEASE_NAME);
+                        NSNumber* releaseNameReplyKey = [NSNumber numberWithUnsignedInt:releaseNameReplyId];
+                        MsgHandler releaseNameReplyHandler = ^bool(AJ_Message* pMsg) {
+                            [[self MessageHandlers] removeObjectForKey:releaseNameReplyKey];
+
+                            if(!pMsg || !pMsg->hdr || pMsg->hdr->msgType == AJ_MSG_ERROR) {
+                                [self sendErrorStatus:AJ_ERR_FAILURE toCallback:[command callbackId] withKeepCallback:false];
+                            } else {
+
+                                AJ_Status status = AJ_BusAdvertiseName([self busAttachment], [wellKnownName UTF8String], AJ_TRANSPORT_ANY, AJ_BUS_STOP_ADVERTISING, 0);
+                                if(status == AJ_OK) {
+                                    uint32_t stopAdvertiseNameReplyId = AJ_REPLY_ID(AJ_METHOD_ADVERTISE_NAME);
+                                    NSNumber* stopAdvertiseNameReplyKey = [NSNumber numberWithUnsignedInt:stopAdvertiseNameReplyId];
+                                    MsgHandler stopAdvertiseNameReplyHandler = ^bool(AJ_Message* pMsg) {
+                                        [[self MessageHandlers] removeObjectForKey:stopAdvertiseNameReplyKey];
+                                        if(!pMsg || !pMsg->hdr || pMsg->hdr->msgType == AJ_MSG_ERROR) {
+                                            [self sendErrorStatus:AJ_ERR_FAILURE toCallback:[command callbackId] withKeepCallback:false];
+                                        } else {
+                                            [self sendProgressMessage:@"stopAdvertisingName: Success" toCallback:[command callbackId] withKeepCallback:false];
+                                        }
+                                        return true;
+                                    };
+
+                                    [[self MessageHandlers] setObject:stopAdvertiseNameReplyHandler forKey:stopAdvertiseNameReplyKey];
+
+
+                                } else {
+                                    [self sendErrorStatus:status toCallback:[command callbackId] withKeepCallback:false];
+                                }
+                            }
+
+                            return true;
+
+                        };
+
+                        [[self MessageHandlers] setObject:releaseNameReplyHandler forKey:releaseNameReplyKey];
+
+                    } else {
+                        [self sendErrorStatus:status toCallback:[command callbackId] withKeepCallback:false];
+                    }
+
+
+                }
+                return true;
+            };
+
+            [[self MessageHandlers] setObject:unbindSessionReplyHandler forKey:unbindSessionReplyKey];
+
+        } else {
+            [self sendErrorStatus:status toCallback:[command callbackId] withKeepCallback:false];
+        }
+
+    }];
+}
+
 // We are passing the listener function to the exec call as its success callback, but in this case,
 // it is expected that the callback can be called multiple times. The error callback is passed just because
 // exec requires it, but it is not used for anything.
@@ -1068,6 +1142,14 @@ dispatch_source_t CreateDispatchTimer(uint64_t interval,
     printf("SENDING: %s\n", [message UTF8String]);
     CDVPluginResult* pluginResult = nil;
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:message];
+    [pluginResult setKeepCallbackAsBool:keepCallback];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
+}
+
+-(void)sendErrorStatus:(AJ_Status)status toCallback:(NSString*) callbackId withKeepCallback:(Boolean)keepCallback {
+    printf("SENDING ERROR: %s\n", AJ_StatusText(status));
+    CDVPluginResult* pluginResult = nil;
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:status];
     [pluginResult setKeepCallbackAsBool:keepCallback];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
 }
