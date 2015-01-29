@@ -347,6 +347,18 @@ cordova.commandProxy.add("AllJoyn", {
         acceptSessionListener(joinSessionRequest);
       }
     );
+  },
+  setSignalRule: function(success, error, parameters) {
+    var ruleString = parameters[0];
+    var applyRule = parameters[1];
+
+    var status = AllJoynWinRTComponent.AllJoyn.aj_BusSetSignalRule(busAttachment, ruleString, applyRule);
+
+    if (status == AllJoynWinRTComponent.AJ_Status.aj_OK) {
+      success();
+    } else {
+      error(status);
+    }
   }
 });
 

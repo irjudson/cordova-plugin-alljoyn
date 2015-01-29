@@ -39,13 +39,13 @@ var AllJoyn = {
         acceptSessionListener: function(joinSessionRequest) {
           joinSessionRequest.response(true);
         },
-        addSignalRule: function(success, error, member, interface) {
-            var ruleString = getSignalRuleString(member, interface);
-            exec(success, error, "AllJoyn", "setSignalRule", [ruleString, 0]);
+        addSignalRule: function(success, error, member, interfaceName) {
+          var ruleString = getSignalRuleString(member, interfaceName);
+          exec(success, error, "AllJoyn", "setSignalRule", [ruleString, 0]);
         },
-        removeSignalRule: function(success, error, member, interface) {
-            var ruleString = getSignalRuleString(member, interface);
-            exec(success, error, "AllJoyn", "setSignalRule", [ruleString, 1]);
+        removeSignalRule: function(success, error, member, interfaceName) {
+          var ruleString = getSignalRuleString(member, interfaceName);
+          exec(success, error, "AllJoyn", "setSignalRule", [ruleString, 1]);
         }
       };
 
