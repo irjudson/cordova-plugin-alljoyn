@@ -90,7 +90,7 @@ uint8_t dbgBASIC_CLIENT = 1;
             status = [self internalConnectBus:[self busAttachment]];
             if(status == AJ_OK) {
                 [self setConnectedToBus:true];
-                [self sendProgressMessage:@"Connected" toCallback:[command callbackId] withKeepCallback:false];
+                [self sendSuccessMessage:@"Connected" toCallback:[command callbackId] withKeepCallback:false];
             } else {
                 [self sendErrorMessage:@"Failed to connect" toCallback:[command callbackId] withKeepCallback:false];
             }
@@ -109,8 +109,11 @@ uint8_t dbgBASIC_CLIENT = 1;
             if([objectDescription isKindOfClass:[NSDictionary class]]) {
                 AJ_Object newObject = {0};
 
-                //setup object
-                //newObject.flags = [[object objectForKey:@"flags"] unsignedIntValue];
+                // If flags were present set them
+                NSNumber* flags = [objectDescription objectForKey:@"flags"];
+                if(flags !=nil && [flags isKindOfClass:[NSNumber class]]) {
+                    newObject.flags = [flags unsignedCharValue];
+                }
 
                 //TODO: Need to track this memory allocation
                 newObject.path = strdup([[objectDescription objectForKey:@"path"] UTF8String]);
@@ -160,7 +163,7 @@ uint8_t dbgBASIC_CLIENT = 1;
         AJ_RegisterObjects(appObjectList, proxyObjectList);
         [self setProxyObjects:proxyObjectList];
         [self setAppObjects:appObjectList];
-        [self sendProgressMessage:@"Registered" toCallback:[command callbackId] withKeepCallback:false];
+        [self sendSuccessMessage:@"Registered" toCallback:[command callbackId] withKeepCallback:false];
     }];
 }
 
@@ -222,7 +225,7 @@ uint8_t dbgBASIC_CLIENT = 1;
                                         [[self MessageHandlers] setObject:acceptSessionHandler forKey:acceptSessionKey];
 
 
-                                        [self sendProgressMessage:@"startAdvertisingName: Success" toCallback:[command callbackId] withKeepCallback:false];
+                                        [self sendSuccessMessage:@"startAdvertisingName: Success" toCallback:[command callbackId] withKeepCallback:false];
                                     }
                                     return true; // busAdvertiseNameReply
                                 };
@@ -291,7 +294,7 @@ uint8_t dbgBASIC_CLIENT = 1;
                                         if(!pMsg || !pMsg->hdr || pMsg->hdr->msgType == AJ_MSG_ERROR) {
                                             [self sendErrorStatus:AJ_ERR_FAILURE toCallback:[command callbackId] withKeepCallback:false];
                                         } else {
-                                            [self sendProgressMessage:@"stopAdvertisingName: Success" toCallback:[command callbackId] withKeepCallback:false];
+                                            [self sendSuccessMessage:@"stopAdvertisingName: Success" toCallback:[command callbackId] withKeepCallback:false];
                                         }
                                         return true;
                                     };
@@ -375,7 +378,7 @@ uint8_t dbgBASIC_CLIENT = 1;
             Marshal_Status marshalStatus = [self unmarshalArgumentsFor:pMsg withSignature:responseType toValues:msgArguments];
 
             if(marshalStatus.status == AJ_OK) {
-                [self sendProgressArray:msgArguments toCallback:[command callbackId] withKeepCallback:true];
+                [self sendSuccessArray:msgArguments toCallback:[command callbackId] withKeepCallback:true];
             } else {
                 [self sendErrorMessage:[NSString stringWithFormat:@"Error %s", AJ_StatusText(marshalStatus.status)] toCallback:[command callbackId] withKeepCallback:true];
             }
@@ -406,7 +409,7 @@ uint8_t dbgBASIC_CLIENT = 1;
 
                 [responseDictionary setObject:[NSString stringWithUTF8String:arg.val.v_string] forKey:@"name"];
                 [responseDictionary setObject:[NSString stringWithUTF8String:pMsg->sender] forKey:@"sender"];
-                [self sendProgressDictionary:responseDictionary toCallback:[command callbackId] withKeepCallback:true];
+                [self sendSuccessDictionary:responseDictionary toCallback:[command callbackId] withKeepCallback:true];
                 return true;
             };
 
@@ -432,7 +435,7 @@ uint8_t dbgBASIC_CLIENT = 1;
                 [responseDictionary setObject:[NSNumber numberWithUnsignedInt:aboutVersion] forKey:@"version"];
                 [responseDictionary setObject:[NSNumber numberWithUnsignedInt:aboutPort] forKey:@"port"];
                 [responseDictionary setObject:[NSString stringWithUTF8String:pMsg->sender] forKey:@"name"];
-                [self sendProgressDictionary:responseDictionary toCallback:[command callbackId] withKeepCallback:true];
+                [self sendSuccessDictionary:responseDictionary toCallback:[command callbackId] withKeepCallback:true];
                 return true;
             };
 
@@ -461,7 +464,7 @@ uint8_t dbgBASIC_CLIENT = 1;
         AJ_Status status = AJ_BusSetSignalRule([self busAttachment], [ruleString UTF8String], [ruleType unsignedCharValue]);
 
         if(status == AJ_OK) {
-            [self sendProgressMessage:@"setSignalRule: Success" toCallback:[command callbackId] withKeepCallback:false];
+            [self sendSuccessMessage:@"setSignalRule: Success" toCallback:[command callbackId] withKeepCallback:false];
         } else {
             NSString* errorMessage = [NSString stringWithFormat:@"setSignalRule: Failure %s", AJ_StatusText(status)];
             [self sendErrorMessage:errorMessage toCallback:[command callbackId] withKeepCallback:false];
@@ -487,6 +490,7 @@ uint8_t dbgBASIC_CLIENT = 1;
         if(status == AJ_OK) {
             NSNumber* methodKey = [NSNumber numberWithUnsignedInt:AJ_REPLY_ID(AJ_METHOD_JOIN_SESSION)];
             MsgHandler messageHandler = ^bool(AJ_Message* pMsg) {
+                [[self MessageHandlers] removeObjectForKey:methodKey];
 
                 AJ_InfoPrintf((" -- Got reply to JoinSession ---\n"));
                 AJ_InfoPrintf(("MsgType: %d 0x%x\n", (*pMsg).hdr->msgType, (*pMsg).hdr->msgType));
@@ -501,20 +505,19 @@ uint8_t dbgBASIC_CLIENT = 1;
                         NSMutableArray* responseArray = [NSMutableArray new];
                         [responseArray addObject:[NSNumber numberWithUnsignedInt:sessionId]];
                         [responseArray addObject:name];
-                        [self sendProgressArray:responseArray toCallback:[command callbackId] withKeepCallback:false];
+                        [self sendSuccessArray:responseArray toCallback:[command callbackId] withKeepCallback:false];
                     } else {
                         if(replyCode == AJ_JOINSESSION_REPLY_ALREADY_JOINED) {
                             NSMutableArray* responseArray = [NSMutableArray new];
                             [responseArray addObject:[NSNumber numberWithUnsignedInt:pMsg->sessionId]];
                             [responseArray addObject:name];
-                            [self sendProgressArray:responseArray toCallback:[command callbackId] withKeepCallback:false];
+                            [self sendSuccessArray:responseArray toCallback:[command callbackId] withKeepCallback:false];
                         } else {
                             [self sendErrorMessage:[NSString stringWithFormat:@"Failure joining session replyCode = 0x%x %d", replyCode, replyCode] toCallback:[command callbackId] withKeepCallback:false];
                         }
                     }
 
                 }
-                [[self MessageHandlers] removeObjectForKey:methodKey];
                 return true;
 
             };
@@ -539,7 +542,7 @@ uint8_t dbgBASIC_CLIENT = 1;
         AJ_Status status = AJ_BusLeaveSession([self busAttachment], [sessionId unsignedIntValue]);
         if(status == AJ_OK) {
             NSString* successMessage = [NSString stringWithFormat:@"Left session %u", [sessionId unsignedIntValue]];
-            [self sendProgressMessage:successMessage toCallback:[command callbackId] withKeepCallback:false];
+            [self sendSuccessMessage:successMessage toCallback:[command callbackId] withKeepCallback:false];
         } else {
             NSString* failedMessage = [NSString stringWithFormat:@"Failed to leave session %d. Reason = %s", [sessionId unsignedIntValue],
                                        AJ_StatusText(status)];
@@ -606,7 +609,7 @@ uint8_t dbgBASIC_CLIENT = 1;
 
         if(path != nil && [path length] > 0) {
             if([self proxyObjects]->path) {
-                free([self proxyObjects]->path);
+                free((void*)[self proxyObjects]->path);
                 [self proxyObjects]->path = NULL;
             }
             status = AJ_SetProxyObjectPath([self proxyObjects], msgId, strdup([path UTF8String]));
@@ -635,10 +638,15 @@ uint8_t dbgBASIC_CLIENT = 1;
                 break;
             case AJ_SIGNAL_MEMBER: {
                 uint8_t signalFlags = 0;
+                uint32_t ttl = 0;
                 if(isOwnSession) {
                     signalFlags = AJ_FLAG_GLOBAL_BROADCAST;
                 }
-                status = AJ_MarshalSignal([self busAttachment], &msg, msgId, [destination UTF8String], [sessionId unsignedIntValue], signalFlags, 0);
+                if(destination == nil && isOwnSession) {
+                    printf("SESSIONLESS SIGNAL\n");
+                    signalFlags |= AJ_FLAG_SESSIONLESS;
+                }
+                status = AJ_MarshalSignal([self busAttachment], &msg, msgId, [destination UTF8String], [sessionId unsignedIntValue], signalFlags, ttl);
                 if(status != AJ_OK) {
                     printf("AJ_MarshalSignal failed with %s\n", AJ_StatusText(status));
                     goto e_Exit;
@@ -669,6 +677,8 @@ uint8_t dbgBASIC_CLIENT = 1;
                     AJ_Status status = AJ_OK;
                     NSMutableArray* outValues = [NSMutableArray new];
 
+                    [[self MessageHandlers] removeObjectForKey:methodKey];
+
                     if(!pMsg || !(pMsg->hdr) || pMsg->hdr->msgType == AJ_MSG_ERROR) {
                         // Error
                         [self sendErrorMessage:@"Error" toCallback:[command callbackId] withKeepCallback:false];
@@ -685,9 +695,8 @@ uint8_t dbgBASIC_CLIENT = 1;
                         return true;
                     }
 
-                    [self sendProgressArray:outValues toCallback:[command callbackId] withKeepCallback:false];
+                    [self sendSuccessArray:outValues toCallback:[command callbackId] withKeepCallback:false];
 
-                    [[self MessageHandlers] removeObjectForKey:methodKey];
                     return true;
                 };
 
@@ -699,7 +708,7 @@ uint8_t dbgBASIC_CLIENT = 1;
         if(status != AJ_OK) {
             [self sendErrorMessage:[NSString stringWithFormat:@"InvokeMember failure: %s", AJ_StatusText(status)] toCallback:[command callbackId] withKeepCallback:false];
         } else if(memberType == AJ_SIGNAL_MEMBER) {
-            [self sendProgressMessage:@"Send Signal success" toCallback:[command callbackId] withKeepCallback:false];
+            [self sendSuccessMessage:@"Send Signal success" toCallback:[command callbackId] withKeepCallback:false];
         }
 
         return;
@@ -899,26 +908,85 @@ e_Exit:
     return marshalStatus;
 }
 
--(Marshal_Status)marshalArgumentFor:(AJ_Message*)pMsg withSignature:(NSString*)signature havingValues:(NSArray*)values startingAtIndex:(unsigned int)initialArgumentIndex {
-    return [self marshalArgumentsFor:pMsg withSignature:signature havingValues:values startingAtIndex:initialArgumentIndex limit:1];
+-(NSString*)getNextToken:(NSString*)signature {
+    NSString* nextToken = nil;
+    NSMutableArray* containerStack = [NSMutableArray new];
+    unsigned int tokenEndIndex = 0;
 
+    NSString* structContainer = @"(";
+    NSString* dictContainer = @"{";
+    NSString* prevContainer = nil;
+
+    // Only do work if signature exists and has some value
+    if(signature != nil && [signature length] > 0) {
+        for(tokenEndIndex = 0;tokenEndIndex< [signature length]; tokenEndIndex++) {
+            switch([signature UTF8String][tokenEndIndex]) {
+                case 'a':
+                    continue;
+                    break;
+                case '(':
+                    [containerStack addObject:structContainer];
+                    break;
+                case ')':
+                    if([containerStack count] < 1) {
+                        printf("Error: Invalid signature (unmatched structure marker): %s", [signature UTF8String]);
+                        goto ErrorExit;
+                    }
+                    prevContainer = [containerStack lastObject];
+                    [containerStack removeLastObject];
+                    if([prevContainer compare:structContainer]) {
+                        printf("Error: Invalid signature (unmatched structure marker): %s", [signature UTF8String]);
+                        goto ErrorExit;
+                    }
+                    break;
+                case '{':
+                    [containerStack addObject:dictContainer];
+                    break;
+                case '}':
+                    if([containerStack count] < 1) {
+                        printf("Error: Invalid signature (unmatched dictionary marker): %s", [signature UTF8String]);
+                        goto ErrorExit;
+                    }
+                    prevContainer = [containerStack lastObject];
+                    [containerStack removeLastObject];
+                    if([prevContainer compare:dictContainer] ) {
+                        printf("Error: Invalid signature (unmatched dictionary marker): %s", [signature UTF8String]);
+                        goto ErrorExit;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            // We found one type without being in an open container.
+            if([containerStack count] == 0) {
+                break;
+            }
+
+        }
+    }
+
+    nextToken = [signature substringToIndex:tokenEndIndex + 1];
+
+    return nextToken;
+ErrorExit:
+    return nil;
 }
 
 -(Marshal_Status)marshalArgumentsFor:(AJ_Message*)pMsg withSignature:(NSString*)signature havingValues:(NSArray*)values startingAtIndex:(unsigned int)initialArgumentIndex {
-    return [self marshalArgumentsFor:pMsg withSignature:signature havingValues:values startingAtIndex:initialArgumentIndex limit:0];
 
-}
-
--(Marshal_Status)marshalArgumentsFor:(AJ_Message*)pMsg withSignature:(NSString*)signature havingValues:(NSArray*)values startingAtIndex:(unsigned int)initialArgumentIndex limit:(unsigned int) argumentLimit{
-
-    printf("marshalArgumentsFor %s\n", [signature UTF8String]);
+    printf("marshalArgumentsFor %s InitialIndex: %d\n", [signature UTF8String], initialArgumentIndex);
+    printf("Next Token: %s\n", [[self getNextToken:signature] UTF8String]);
     Marshal_Status marshalStatus = {AJ_OK, initialArgumentIndex};
-    if(!pMsg) {
+
+    // Check parameters
+    if(!pMsg ||
+       signature == nil || [signature length] < 1 ||
+       values == nil || [values count] <= initialArgumentIndex) {
         marshalStatus.status = AJ_ERR_INVALID;
         return marshalStatus;
     }
 
-    unsigned long len = [signature length];
     uint8_t u8;
     uint16_t u16;
     uint32_t u32;
@@ -930,12 +998,20 @@ e_Exit:
     const char* varSig = NULL;
 
     AJ_Arg arg = {0};
-    for(int i = 0; i < len && (argumentLimit == 0 || i < argumentLimit); ++i) {
+
+    for(unsigned int signatureIndex = 0; signatureIndex < [signature length]; signatureIndex++) {
+
+        char current = [signature UTF8String][signatureIndex];
+
+        // Structure closing is handled by parent
+        if(current == ')') {
+            break;
+        }
+
         if(marshalStatus.nextArgumentIndex >= [values count]) {
             marshalStatus.status = AJ_ERR_MARSHAL;
             break;
         }
-        char current = [signature UTF8String][i];
         //Reset arg to initial values
         arg.container = 0;
         arg.flags = 0;
@@ -991,7 +1067,6 @@ e_Exit:
                 break;
             case AJ_ARG_UINT32:
                 u32 = [[values objectAtIndex:marshalStatus.nextArgumentIndex++] unsignedIntValue];
-                printf("u32: %u\n", u32);
                 arg.val.v_uint32 = &u32;
                 break;
             case AJ_ARG_UINT64:
@@ -1008,28 +1083,83 @@ e_Exit:
                 break;
             case AJ_ARG_STRING:
                 arg.val.v_string = [[values objectAtIndexedSubscript:marshalStatus.nextArgumentIndex++] UTF8String];
-
-                printf("string %s\n", arg.val.v_string);
                 break;
             case AJ_ARG_ARRAY:
+                // Determine the signature for array members
+                // For each argument in the array paraemter marshal it using the member signature
+                // Move signature index forward past array member signature
                 arg.typeId = AJ_ARG_ARRAY;
                 marshalStatus.status = AJ_MarshalContainer(pMsg, &arg, AJ_ARG_ARRAY);
-
                 if(marshalStatus.status == AJ_OK) {
                     NSArray* arrayValue = [values objectAtIndex:marshalStatus.nextArgumentIndex++];
                     if(![arrayValue isKindOfClass:[NSArray class]]) {
                         marshalStatus.status = AJ_ERR_MARSHAL;
                     } else {
-                        marshalStatus = [self marshalArgumentFor:pMsg withSignature:signature havingValues:arrayValue startingAtIndex:i+1];
-                        if(marshalStatus.status == AJ_OK) {
-                            marshalStatus.status = AJ_MarshalCloseContainer(pMsg, &arg);
-                            i+=marshalStatus.nextArgumentIndex;
+                        unsigned int arrayIndex = 0;
+                        Marshal_Status arrayMarshalStatus = {AJ_OK, 0};
+                        NSString* arrayMemberSignature = [self getNextToken:[signature substringFromIndex:signatureIndex+1]];
+                        if(arrayMemberSignature == nil) {
+                            marshalStatus.status = AJ_ERR_MARSHAL;
+                        } else {
+                            while(arrayIndex < [arrayValue count] && marshalStatus.status == AJ_OK) {
+                                arrayMarshalStatus = [self marshalArgumentsFor:pMsg withSignature:arrayMemberSignature havingValues:arrayValue startingAtIndex:arrayIndex++];
+                                marshalStatus.status = arrayMarshalStatus.status;
+                            }
+                            if(marshalStatus.status == AJ_OK) {
+                                marshalStatus.status = AJ_MarshalCloseContainer(pMsg, &arg);
+                                signatureIndex += [arrayMemberSignature length];
+
+                            }
                         }
                     }
                 }
-                continue;
                 break;
             case AJ_ARG_DICT_ENTRY:
+                // Marshal the open container
+                arg.typeId = AJ_ARG_DICT_ENTRY;
+                marshalStatus.status = AJ_MarshalContainer(pMsg, &arg, AJ_ARG_DICT_ENTRY);
+                if(marshalStatus.status == AJ_OK) {
+                    // Get the dictionary entry values from the argument list
+                    // Currently we expect this to be an array.
+                    // TODO: Consider how to handle case where an object is passed in intending to be an array of dictionary entries
+                    NSArray* dictEntryValues = [values objectAtIndex:marshalStatus.nextArgumentIndex++];
+                    if(![dictEntryValues isKindOfClass:[NSArray class]]) {
+                        marshalStatus.status = AJ_ERR_MARSHAL;
+                    } else {
+                        // Marshal the key
+                        NSString* keySignature = [self getNextToken:[signature substringFromIndex:(signatureIndex + 1)]];
+                        if(keySignature == nil) {
+                            marshalStatus.status = AJ_ERR_MARSHAL;
+                        } else {
+                            signatureIndex += [keySignature length];
+                            Marshal_Status dictEntryMarshalStatus = [ self marshalArgumentsFor:pMsg withSignature:keySignature havingValues:dictEntryValues startingAtIndex:0];
+
+                            if(dictEntryMarshalStatus.status == AJ_OK) {
+                                // marshal the value
+                                // The key could only have been a simple type so we start at the 2nd element
+                                // in the value array
+                                NSString* valueSignature = [self getNextToken:[signature substringFromIndex:(signatureIndex+1)]];
+                                if(valueSignature ==nil) {
+                                    marshalStatus.status = AJ_ERR_MARSHAL;
+                                } else {
+                                    dictEntryMarshalStatus = [self marshalArgumentsFor:pMsg withSignature:valueSignature havingValues:dictEntryValues startingAtIndex:1];
+                                    marshalStatus.status = dictEntryMarshalStatus.status;
+                                    if(dictEntryMarshalStatus.status == AJ_OK) {
+                                        signatureIndex += [valueSignature length];
+                                        // If we are not at the closing dictionary entry marker then the signature
+                                        // is invalid. It should be something like {<token><token>}
+                                        if([signature UTF8String][signatureIndex] == '}') {
+                                            marshalStatus.status = AJ_MarshalCloseContainer(pMsg, &arg);
+                                        } else {
+                                            marshalStatus.status = AJ_ERR_MARSHAL;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
             case AJ_ARG_HANDLE:
             case AJ_ARG_INVALID:
                 marshalStatus.status = AJ_ERR_INVALID;
@@ -1037,13 +1167,27 @@ e_Exit:
             case AJ_ARG_OBJ_PATH:
             case AJ_ARG_SIGNATURE:
             case AJ_ARG_STRUCT:
-                // marshal container
-                // expect array
-                // marshal until end of array or mismatch
-                // marshal close container
-
+                arg.typeId = AJ_ARG_STRUCT;
+                marshalStatus.status = AJ_MarshalContainer(pMsg, &arg, AJ_ARG_STRUCT);
+                if(marshalStatus.status == AJ_OK) {
+                    NSArray* structValues = [values objectAtIndex:marshalStatus.nextArgumentIndex++];
+                    if(![structValues isKindOfClass:[NSArray class]]) {
+                        marshalStatus.status = AJ_ERR_MARSHAL;
+                    } else {
+                        NSString* structureSignature = [self getNextToken:[signature substringFromIndex:signatureIndex]];
+                        // Marshal the structure value - Use the structure signature starting after the opening '('
+                        // When the function finds the corresponding ')' it will return back (see below case)
+                        Marshal_Status structureMarshalStatus = [self marshalArgumentsFor:pMsg withSignature:[structureSignature substringFromIndex:1] havingValues:structValues startingAtIndex:0];
+                        marshalStatus.status = structureMarshalStatus.status;
+                        if(marshalStatus.status == AJ_OK) {
+                            signatureIndex += [structureSignature length];
+                            marshalStatus.status = AJ_MarshalCloseContainer(pMsg, &arg);
+                        }
+                    }
+                }
+                break;
             case ')': // Close Structure
-                marshalStatus.status = AJ_ERR_UNKNOWN;
+                return marshalStatus;
                 break;
             case AJ_ARG_VARIANT:
                 varSig = [[values objectAtIndex:marshalStatus.nextArgumentIndex++] UTF8String];
@@ -1056,6 +1200,8 @@ e_Exit:
                 }
 
                 // Marshal the actual type
+                // Note that we also update our nextArgumentIndex value here.
+                // This is because we do not know how many arguments the variant will use before the call
                 marshalStatus = [self marshalArgumentsFor:pMsg withSignature:[NSString stringWithUTF8String:varSig] havingValues:values startingAtIndex:marshalStatus.nextArgumentIndex];
                 if(marshalStatus.status != AJ_OK) {
                     break;
@@ -1071,13 +1217,18 @@ e_Exit:
         }
 
         if(marshalStatus.status == AJ_OK) {
-            marshalStatus.status = AJ_MarshalArg(pMsg, &arg);
+            // The container types handle their own marshalling (
+            if(arg.typeId != AJ_ARG_ARRAY && arg.typeId != AJ_ARG_STRUCT && arg.typeId != AJ_ARG_DICT_ENTRY) {
+                marshalStatus.status = AJ_MarshalArg(pMsg, &arg);
+            }
         } else {
             break;
         }
     }
 
+
 e_Exit:
+
     return marshalStatus;
 }
 
@@ -1119,10 +1270,10 @@ dispatch_source_t CreateDispatchTimer(uint64_t interval,
 
     // Stop background tasks
     dispatch_suspend([self dispatchSource]);
-    [self sendProgressMessage:@"Disconnected" toCallback:[command callbackId] withKeepCallback:false];
+    [self sendSuccessMessage:@"Disconnected" toCallback:[command callbackId] withKeepCallback:false];
 }
 
--(void) sendProgressArray:(NSArray*)array toCallback:(NSString*)callbackId withKeepCallback:(Boolean)keepCallback {
+-(void) sendSuccessArray:(NSArray*)array toCallback:(NSString*)callbackId withKeepCallback:(Boolean)keepCallback {
     CDVPluginResult* pluginResult = nil;
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:array];
     [pluginResult setKeepCallbackAsBool:keepCallback];
@@ -1130,7 +1281,7 @@ dispatch_source_t CreateDispatchTimer(uint64_t interval,
 
 }
 
--(void) sendProgressDictionary:(NSDictionary*)dictionary toCallback:(NSString*)callbackId withKeepCallback:(Boolean)keepCallback {
+-(void) sendSuccessDictionary:(NSDictionary*)dictionary toCallback:(NSString*)callbackId withKeepCallback:(Boolean)keepCallback {
     CDVPluginResult* pluginResult = nil;
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dictionary];
     [pluginResult setKeepCallbackAsBool:keepCallback];
@@ -1138,7 +1289,7 @@ dispatch_source_t CreateDispatchTimer(uint64_t interval,
 
 }
 
--(void) sendProgressMessage:(NSString*)message toCallback:(NSString*) callbackId withKeepCallback:(Boolean)keepCallback {
+-(void) sendSuccessMessage:(NSString*)message toCallback:(NSString*) callbackId withKeepCallback:(Boolean)keepCallback {
     printf("SENDING: %s\n", [message UTF8String]);
     CDVPluginResult* pluginResult = nil;
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:message];
@@ -1247,39 +1398,28 @@ Fail:
     }
 
     AJ_Status status = AJ_OK;
-    int i = 0;
-    while (status == AJ_OK && (i++ < 1)) {
-        AJ_InfoPrintf((" --- While ---\n"));
-        AJ_Message msg;
-        // get next message
-        status = AJ_UnmarshalMsg([self busAttachment], &msg, MSG_TIMEOUT);
+    AJ_Message msg;
+    // get next message
+    status = AJ_UnmarshalMsg([self busAttachment], &msg, MSG_TIMEOUT);
 
-        // Check for errors we can ignore
-        if(status == AJ_ERR_TIMEOUT) {
-            // Nothing to do for now, continue i guess
-            AJ_InfoPrintf(("Timeout getting MSG. Will try again...\n"));
-            status = AJ_OK;
-            continue;
-        }
-        if (status == AJ_ERR_NO_MATCH) {
-            AJ_InfoPrintf(("AJ_ERR_NO_MATCH in main loop. Ignoring!\n"));
-            // Ignore unknown messages
-            status = AJ_OK;
-            continue;
-        }
-
-        // If not ignored fail.
-        if (status != AJ_OK) {
-            AJ_ErrPrintf((" -- MainLoopError AJ_UnmarshalMsg returned status=%s\n", AJ_StatusText(status)));
-            break;
-        }
+    // Check for errors we can ignore
+    if(status == AJ_ERR_TIMEOUT) {
+        // Nothing to do for now, continue i guess
+        AJ_InfoPrintf(("Timeout getting MSG. Will try again...\n"));
+        status = AJ_OK;
+    } else if (status == AJ_ERR_NO_MATCH) {
+        AJ_InfoPrintf(("AJ_ERR_NO_MATCH in main loop. Ignoring!\n"));
+        // Ignore unknown messages
+        status = AJ_OK;
+    } else if (status != AJ_OK) {
+        AJ_ErrPrintf((" -- MainLoopError AJ_UnmarshalMsg returned status=%s\n", AJ_StatusText(status)));
+    } else {
         AJ_InfoPrintf((" Executing handlers if any ... \n"));
         // If somebody has requested a handler for a specific msg
         NSNumber* msgIdAsNumber = [NSNumber numberWithUnsignedInt:msg.msgId];
         MsgHandler handler = [self MessageHandlers][msgIdAsNumber];
         bool handled = false;
         if (handler != nil && handler != NULL) {
-
             handled = handler(&msg);
         }
         if(!handled) {
@@ -1296,7 +1436,7 @@ Fail:
                     uint32_t id, reason;
                     AJ_UnmarshalArgs(&msg, "uu", &id, &reason);
                     AJ_InfoPrintf(("Session lost. ID = %u, reason = %u", id, reason));
-                    //                    [self sendProgressMessage:@"lost session :("];
+                    //                    [self sendSuccessMessage:@"lost session :("];
                     
                     AJ_ErrPrintf((" -- (): AJ_SIGNAL_SESSION_LOST_WITH_REASON: AJ_ERR_READ\n"));
                 }
@@ -1318,6 +1458,7 @@ Fail:
         }
         AJ_CloseMsg(&msg);
     }
+
     if(status != AJ_OK) {
         printf("ERROR: Main loop had a non-succesful iteration. Exit status: %d 0x%x %s", status, status, AJ_StatusText(status));
         //        [self sendErrorMessage:[NSString stringWithFormat:@"Error encountered: %d 0x%x %s", status, status, AJ_StatusText(status)]];
