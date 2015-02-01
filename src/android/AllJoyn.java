@@ -14,6 +14,7 @@ import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaWebView;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.json.JSONException;
 
 public class AllJoyn extends CordovaPlugin {
@@ -77,15 +78,55 @@ public class AllJoyn extends CordovaPlugin {
 			}
 		}
 		if (action.equals("registerObjects")) {
-			Log.i(TAG, "AllJoyn.registerObjects");
-
-			AJ_Status status;
-			JSONArray localObjects = data.getJSONArray(0);
-			JSONArray remoteObjects = data.getJSONArray(1);
+			AJ_Status status = null;
 			AJ_Object local = null;
+			JSONArray localObjects = null;
+			JSONArray remoteObjects = null;
 			AJ_Object remote = null;
+			AJ_Object prev = null;
 
-			Log.i(TAG, "AllJoyn.registerObjects("+localObjects+","+remoteObjects+")");
+			Log.i(TAG, "AllJoyn.registerObjects()");
+
+			if (data.isNull(0)) {
+				Log.i(TAG, "AllJoyn.registerObjects: arg 0 null");
+			} else {
+				localObjects = data.getJSONArray(0);
+				for(int i = 0; i < localObjects.length(); i++) {
+					JSONObject object = localObjects.getJSONObject(i);
+					Log.i(TAG, "AllJoyn.registerObjects("+object.toString()+")");
+					if (local == null) {
+						local = alljoyn.AJ_ObjectsCreate();
+						local.setPath(object.getString("path"));
+						prev = local;
+					} else {
+						AJ_Object nObj = new AJ_Object();
+						nObj.setPath(object.getString("path"));
+						alljoyn.AJ_ObjectsAdd(prev, nObj);
+						prev = nObj;
+					}
+				}				
+				Log.i(TAG, "AllJoyn.registerObjects() Local: " + localObjects.toString() + " => " + local.toString());
+			}
+			if (data.isNull(1)) {
+				Log.i(TAG, "AllJoyn.registerObjects: arg 1 null");				
+			} else {
+				remoteObjects = data.getJSONArray(1);
+				for(int i = 0; i < remoteObjects.length(); i++) {
+					JSONObject object = remoteObjects.getJSONObject(i);
+					Log.i(TAG, "AllJoyn.registerObjects("+object.toString()+")");
+					if (remote == null) {
+						remote = alljoyn.AJ_ObjectsCreate();
+						remote.setPath(object.getString("path"));
+						prev = remote;
+					} else {
+						AJ_Object nObj = new AJ_Object();
+						nObj.setPath(object.getString("path"));
+						alljoyn.AJ_ObjectsAdd(prev, nObj);
+						prev = nObj;
+					}
+				}				
+				Log.i(TAG, "AllJoyn.registerObjects() Remote: " + remoteObjects.toString() + " => " + remote.toString());
+			}
 
 			alljoyn.AJ_RegisterObjects(local, remote);
 
