@@ -16,10 +16,13 @@
 	</js-module>
 
     <hook type="before_plugin_install" src="scripts/beforePluginInstall.js" />
-    <!-- <hook type="after_plugin_install" src="scripts/afterPluginInstall.js" /> -->
+    <hook type="after_plugin_install" src="scripts/afterPluginInstall.js" />
 
 	<!-- android -->
 	<platform name="android">
+		<hook type="before_plugin_install" src="scripts/androidBeforePluginInstall.js" />
+		<hook type="after_plugin_install" src="scripts/androidAfterPluginInstall.js" />
+		
 		<config-file target="res/xml/config.xml" parent="/*">
 			<feature name="AllJoyn">
 				<param name="android-package" value="org.allseen.alljoyn.AllJoyn"/>
