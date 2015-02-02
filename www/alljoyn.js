@@ -9,9 +9,13 @@ var getSignature = function(indexList, objectsList) {
   var objects = objectsList[indexList[0]];
   var object = objects[indexList[1]];
   var interfaces = object.interfaces;
-  var signature = interfaces[indexList[2]][indexList[3] + 1]
+  var signature = interfaces[indexList[2]][indexList[3] + 1];
   return signature;
-}
+};
+
+var getSignalRuleString = function(member, interface) {
+    return "type='signal',member='" + member + "',interface='" + interface + "'";
+};
 
 var AllJoyn = {
   connect: function(success, error) {
@@ -24,10 +28,34 @@ var AllJoyn = {
           // The listener is also passed as a parameter, because in the Windows implementation, the success callback
           // can't be called multiple times.
           exec(listener, function() { }, "AllJoyn", "addListener", [indexList, responseType, listener]);
+        },
+        // joinSessionRequest = {
+        //   port: 12,
+        //   sender: "afa-f",
+        //   sessionId: 123,
+        //   response: function // to be called with either true or false
+        // }
+        // Usage: bus.acceptSessionListener = myListenerFunction(joinSessionRequest);
+        acceptSessionListener: function(joinSessionRequest) {
+          joinSessionRequest.response(true);
+        },
+        addSignalRule: function(success, error, member, interfaceName) {
+          var ruleString = getSignalRuleString(member, interfaceName);
+          exec(success, error, "AllJoyn", "setSignalRule", [ruleString, 0]);
+        },
+        removeSignalRule: function(success, error, member, interfaceName) {
+          var ruleString = getSignalRuleString(member, interfaceName);
+          exec(success, error, "AllJoyn", "setSignalRule", [ruleString, 1]);
         }
       };
+
+      var acceptSessionListener = function(joinSessionRequest) {
+        bus.acceptSessionListener(joinSessionRequest);
+      };
+      exec(acceptSessionListener, function() { }, "AllJoyn", "setAcceptSessionListener", [acceptSessionListener]);
+
       success(bus);
-    }
+    };
     exec(successCallback, error, "AllJoyn", "connect", ["", 5000]);
 	},
   /*
