@@ -336,7 +336,7 @@ namespace AllJoynWinRTComponent
 	public enum class AJ_ArgType
 	{
 		AJ_Arg_Invalid = '\0',				/**< AllJoyn invalid type */
-		AJ_Arg_ARRAY = 'a',					/**< AllJoyn array container type */
+		AJ_Arg_Array = 'a',					/**< AllJoyn array container type */
 		AJ_Arg_Boolean = 'b',				/**< AllJoyn boolean basic type */
 		AJ_Arg_Double = 'd',				/**< AllJoyn IEEE 754 double basic type */
 		AJ_Arg_Signature = 'g',				/**< AllJoyn signature basic type */
@@ -526,6 +526,7 @@ namespace AllJoynWinRTComponent
 		static void AJ_ReleaseObjects();
 		static AJ_Status AJ_MarshalMethodCall(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t msgId, String^ destination, AJ_SessionId sessionId, uint8_t flags, uint32_t timeout);
 		static AJ_Status AJ_MarshalArgs(AJ_Message^ msg, String^ signature, const Array<String^>^ args);
+		static AJ_Status AJ_MarshalArg(AJ_Message^ msg, String^ signature, String^ args);
 		static AJ_Status AJ_DeliverMsg(AJ_Message^ msg);
 		static AJ_Status AJ_CloseMsg(AJ_Message^ msg);
 		static IAsyncOperation<AJ_Status>^ AJ_UnmarshalMsg(AJ_BusAttachment^ bus, AJ_Message^ msg, uint32_t timeout);
@@ -548,6 +549,16 @@ namespace AllJoynWinRTComponent
 		static AJ_Status AJ_MarshalPropertyArgs(AJ_Message^ msg, uint32_t propId);
 		static AJ_Status AJ_BusPropGet(AJ_Message^ msg, AJ_BusPropGetCallback^ callback);
 		static AJ_Status AJ_BusPropSet(AJ_Message^ msg, AJ_BusPropSetCallback^ callback);
+		static AJ_Status AJ_BusBindSessionPort(AJ_BusAttachment^ bus, uint16_t port, AJ_SessionOpts^ opts, uint8_t flags);
+		static AJ_Status AJ_BusUnbindSession(AJ_BusAttachment^ bus, uint16_t port);
+		static AJ_Status AJ_BusRequestName(AJ_BusAttachment^ bus, String^ name, uint32_t flags);
+		static AJ_Status AJ_BusReleaseName(AJ_BusAttachment^ bus, String^ name);
+		static AJ_Status AJ_BusAdvertiseName(AJ_BusAttachment^ bus, String^ name, uint16_t transportMask, uint8_t op, uint8_t flags);
+		static AJ_Status AJ_SetProxyObjectPath(const Array<AJ_Object^>^ proxyObjects, uint32_t msgId, String^ objPath);
+		static AJ_Status AJ_MarshalContainer(AJ_Message^ msg, AJ_Arg^ arg, uint8_t typeId);
+		static AJ_Status AJ_MarshalCloseContainer(AJ_Message^ msg, AJ_Arg^ arg);
+		static AJ_Status AJ_UnmarshalContainer(AJ_Message^ msg, AJ_Arg^ arg, uint8_t typeId);
+		static AJ_Status AJ_UnmarshalCloseContainer(AJ_Message^ msg, AJ_Arg^ arg);
 
 		/////////////////////////////////////////////////////////////////////////
 		// Support functions for introspection
